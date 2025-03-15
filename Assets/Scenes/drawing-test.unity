@@ -13035,7 +13035,7 @@ GameObject:
   - component: {fileID: 1211646677}
   - component: {fileID: 1211646676}
   m_Layer: 0
-  m_Name: Plane
+  m_Name: Paper
   m_TagString: Paper
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -23312,7 +23312,7 @@ Transform:
   m_GameObject: {fileID: 2622669844631529722}
   serializedVersion: 2
   m_LocalRotation: {x: 0.70492697, y: -0.05547897, z: 0.05547897, w: 0.70492697}
-  m_LocalPosition: {x: -0.288, y: 0.502, z: -1.403}
+  m_LocalPosition: {x: -0.3452, y: 0.5046, z: -1.4121}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

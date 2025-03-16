@@ -1,301 +1,346 @@
-/*
- * This project is completely free to use/edit and distrubute as you please!
- * Created by Craig & his good friend ChatGPT
- * 
- * Wishlist Airport X-Ray Simulator on steam!
- * 
- */
 using System.Collections.Generic;
 using UnityEngine;
+using Oculus.Platform;              // If you’re using Oculus Platform
+using Oculus.Platform.Models;      // If you’re using Oculus Platform
+using UnityEngine.XR;
+using UnityEngine.InputSystem;      // Optional if you’re using the new InputSystem
 
 public class Whiteboard : MonoBehaviour
 {
-    [Header("Initial Setup")]
-    [SerializeField] private bool useFirstImage = true; // Do you want a custom image displayed on the board to begin with?
-    [SerializeField] private Texture2D firstImage; // Assign your desired first image
+    [Header("XR Controller Settings")]
+    [SerializeField] private OVRInput.Controller rightHand = OVRInput.Controller.RTouch;
+    [SerializeField] private OVRInput.Controller leftHand = OVRInput.Controller.LTouch;
 
     [Header("Textures")]
-    [SerializeField] private RenderTexture renderTexture; // Assign the render texture
-    [SerializeField] private Texture2D brushTexture; // Assign the brush texture
-    [SerializeField] private Texture2D eraserTexture; // Assign the eraser texture
+    [SerializeField] private RenderTexture renderTexture;
+    [SerializeField] private Texture2D brushTexture;
+    [SerializeField] private Texture2D eraserTexture;
 
     [Header("Brush Settings")]
-    [SerializeField] private Color brushColor = Color.black; // Current brush color - default to black
-    [SerializeField] private float brushSize = 15.0f; // Current brush size - default to 15f
-    [SerializeField] private float smoothSteps = 800f; // Smoothsteps, these are used to smooth out the lines, increasing this too high will reduce performance with little noticable difference
+    [SerializeField] private Color brushColor = Color.black;
+    [SerializeField] private float brushSize = 15.0f;
+    [SerializeField] private float smoothSteps = 800f;
 
     [Header("Eraser Settings")]
-    [SerializeField] private GameObject eraserMesh; // Assign the eraser mesh
+    [SerializeField] private GameObject eraserMesh;
 
     [Header("Marker Settings")]
-    private int selectedMarker = 0; // Current selected marker
-    [SerializeField] private List<Color> colors; // Your whiteboard colors. These colors will be applied to the display pens and the pens you draw with
-    [SerializeField] private Material baseMarkerMaterial; // Assign base marker material
-    [SerializeField] private List<GameObject> displayMarkers; // List of the display markers on the front of the board. If you want to add more, drop them here
-    [SerializeField] private GameObject heroMarker; // The gameobject of the mesh that follows the cursor to draw
+    [SerializeField] private Material baseMarkerMaterial;
+    [SerializeField] private List<Color> colors;            // 0..n color markers
+    [SerializeField] private List<GameObject> displayMarkers; // Physical markers on the pen rack
+    [SerializeField] private GameObject heroMarker;          // The pen tip that follows your controller
 
     [Header("Other Settings")]
+    [SerializeField] private GameObject rag;               // The "rag" or "eraser" object on the board
     [SerializeField] private float interactDistance = 2f;
-    [SerializeField] private GameObject rag;
-    [SerializeField] private float hoverOffset = 0.02f; // Offset for hovering marker
-    [SerializeField] private float markerSmoothingSpeed = 20f; // Speed for marker smoothing
+    [SerializeField] private float hoverOffset = 0.02f;
+    [SerializeField] private float markerSmoothingSpeed = 20f;
 
-    private Material drawMaterial; // Local reference to the draw material
-    private Vector2? previousUV = null; // Reference to remember last drawn position
+    // Internal references
+    private Material drawMaterial;
+    private MeshRenderer heroMarkerRenderer;
+    private Vector2? previousUV = null;
 
-    private MeshRenderer heroMarkerRenderer; // Reference to the hero markers renderer
+    private int selectedMarker = 0; // Which marker index is selected (0..colors.Count-1, 5 = eraser, etc.)
 
     private void Start()
     {
         heroMarkerRenderer = heroMarker.GetComponent<MeshRenderer>();
         InitializeRenderTexture();
         InitializeDisplayMarkers();
-        ChangeMarkers();
+        ChangeMarkers(0); // Start with index 0 by default
     }
+
+    /// <summary>
+    /// Merges the VR logic and the first-script behavior:
+    /// 1) Raycast from your right-hand controller.
+    /// 2) If it hits something, check if it's a marker, rag, or board.
+    /// 3) Act accordingly (select marker/eraser/rag or draw).
+    /// 4) Show/hide the hero marker or eraser mesh.
+    /// </summary>
+    private void Update()
+    {
+        // 1) Raycast from your VR controller
+        if (GetControllerPosition(rightHand, out Vector3 controllerPos, out Vector3 controllerDir))
+        {
+            Ray ray = new Ray(controllerPos, controllerDir);
+            if (Physics.Raycast(ray, out RaycastHit hit, interactDistance))
+            {
+
+                GameObject hitObject = hit.collider.gameObject;
+
+                // 2) Check if we’re hitting any of the marker objects or the rag
+                //    and if the user pulls the trigger *down* this frame
+                if (OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, rightHand))
+                {
+                    // Check if we hit a marker in displayMarkers
+                    for (int i = 0; i < displayMarkers.Count; i++)
+                    {
+                        if (hitObject == displayMarkers[i])
+                        {
+                            ChangeMarkers(i);
+                            return; // We can return here because we've selected a new marker
+                        }
+                    }
+
+                    // Check if we hit the rag
+                    if (hitObject == rag)
+                    {
+                        ClearRenderTexture();
+                        return; // We can return here because we just cleared the board
+                    }
+                }
+
+                // 3) If we’re hitting the whiteboard itself
+                if (hitObject == this.gameObject)
+                {
+                    // Move or show the marker/eraser (even when hovering)
+                    UpdateMarkerOrEraserPosition(hit);
+
+                    // If user is holding the trigger for drawing/erasing
+                    if (OVRInput.Get(OVRInput.Button.PrimaryIndexTrigger, rightHand))
+                    {
+                        // Attempt to get UV coords for the board
+                        if (TryGetUVCoordinates(hit, out Vector2 uv))
+                        {
+                            if (previousUV.HasValue)
+                            {
+                                DrawBetween(previousUV.Value, uv);
+                            }
+                            else
+                            {
+                                Draw(uv);
+                            }
+                            previousUV = uv;
+                        }
+                    }
+                    else
+                    {
+                        // Not drawing, reset previousUV so lines don’t connect
+                        previousUV = null;
+                    }
+                }
+                else
+                {
+                    // We’re hitting something else that’s not the board
+                    // Hide the hero marker or move it to the marker if it’s a marker object
+                    // but we only handle marker selection on GetDown
+                    HideMarkerAndEraser();
+                }
+            }
+            else
+            {
+                // Raycast didn’t hit anything, hide everything
+                HideMarkerAndEraser();
+                previousUV = null;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Same logic from first script: changes marker color, toggles brush or eraser,
+    /// shows/hides hero marker or eraser mesh, etc.
+    /// </summary>
     void ChangeMarkers(int index = 0)
     {
         selectedMarker = index;
         for (int i = 0; i < displayMarkers.Count; i++)
         {
             if (i == selectedMarker)
-            {
                 displayMarkers[i].SetActive(false); // Hide the selected marker
-            }
             else
-            {
-                displayMarkers[i].SetActive(true); // Show the unselected markers
-            }
+                displayMarkers[i].SetActive(true);  // Show the unselected markers
         }
 
+        // If your design has the eraser as the last index (like i=5 in the original),
+        // you can do: if (index == 5) { ... } else { ... }
+        // Just ensure your `displayMarkers.Count` includes the eraser in the right slot.
         if (index == 5) // Eraser
         {
-            brushColor = Color.white; // Set brush color to white for erasing
-            brushSize = 150f; // Increase brush size for erasing
-            drawMaterial.SetTexture("_MainTex", eraserTexture); // Set the eraser texture
+            brushColor = Color.white;
+            brushSize = 150f;
+            drawMaterial.SetTexture("_MainTex", eraserTexture);
 
-            // Hide the hero marker and show the eraser
             heroMarker.SetActive(false);
             eraserMesh.SetActive(true);
         }
         else
         {
-            brushColor = colors[index]; // Set brush color to the selected marker's color
-            brushSize = 15f; // Set brush size for drawing
-            drawMaterial.SetTexture("_MainTex", brushTexture); // Set the brush texture
+            brushColor = colors[index];
+            brushSize = 15f;
+            drawMaterial.SetTexture("_MainTex", brushTexture);
 
             Material markerMaterialInstance = new Material(baseMarkerMaterial);
-            markerMaterialInstance.color = colors[index]; // Set the marker material color
-            heroMarkerRenderer.material = markerMaterialInstance; // Apply the marker material to the hero marker
+            markerMaterialInstance.color = colors[index];
+            heroMarkerRenderer.material = markerMaterialInstance;
 
-            // Show the hero marker and hide the eraser
             heroMarker.SetActive(true);
             eraserMesh.SetActive(false);
         }
     }
-    private void Update()
+
+    /// <summary>
+    /// Called whenever we’re hovering or drawing on the whiteboard.
+    /// Moves the hero marker or eraser to the correct position.
+    /// </summary>
+    private void UpdateMarkerOrEraserPosition(RaycastHit hit)
     {
-        Vector3 mousePos = Input.mousePosition; // Get the current mouse position
-        Ray ray = Camera.main.ScreenPointToRay(mousePos); // Create a ray from the camera to the mouse position
-        RaycastHit hit;
+        // The exact position on the board surface
+        Vector3 targetPos = hit.point + hit.normal * hoverOffset;
 
-        if (Physics.Raycast(ray, out hit, interactDistance)) // Perform a raycast
+        if (selectedMarker == 5)
         {
-            if (hit.collider.gameObject == gameObject)
-            {
-                if (Input.GetMouseButton(0)) // Check for mouse input
-                {
-                    if (selectedMarker == 5)
-                    {
-                        // Handle eraser behavior
-                        eraserMesh.SetActive(true);
-                        eraserMesh.transform.position = Vector3.Lerp(eraserMesh.transform.position, hit.point, Time.deltaTime * markerSmoothingSpeed);
-                    }
-                    else
-                    {
-                        // Handle marker behavior
-                        heroMarker.SetActive(true);
-                        heroMarker.transform.position = Vector3.Lerp(heroMarker.transform.position, hit.point, Time.deltaTime * markerSmoothingSpeed);
-                    }
-
-                    Vector2 uv;
-                    if (TryGetUVCoordinates(hit, out uv))
-                    {
-                        if (previousUV.HasValue)
-                        {
-                            DrawBetween(previousUV.Value, uv); // Draw between the previous and current UV coordinates
-                        }
-                        else
-                        {
-                            Draw(uv); // Draw at the current UV coordinate
-                        }
-                        previousUV = uv;
-                    }
-                }
-                else
-                {
-                    Vector3 markerPosition = hit.point + hit.normal * hoverOffset; // Calculate the marker position with hover offset
-                    if (selectedMarker == 5)
-                    {
-                        eraserMesh.SetActive(true);
-                        eraserMesh.transform.position = Vector3.Lerp(eraserMesh.transform.position, markerPosition, Time.deltaTime * markerSmoothingSpeed);
-                    }
-                    else
-                    {
-                        heroMarker.SetActive(true);
-                        heroMarker.transform.position = Vector3.Lerp(heroMarker.transform.position, markerPosition, Time.deltaTime * markerSmoothingSpeed);
-                    }
-                    previousUV = null;
-                }
-            }
-            else
-            {
-                heroMarker.SetActive(false); // Hide the hero marker
-                eraserMesh.SetActive(false); // Hide the eraser mesh
-            }
-
-            for (int i = 0; i < displayMarkers.Count; i++)
-            {
-                if (Input.GetMouseButtonDown(0) && hit.collider.gameObject == displayMarkers[i])
-                {
-                    ChangeMarkers(i); // Change the selected marker
-                    break;
-                }
-            }
-
-            if (Input.GetMouseButtonDown(0) && hit.collider.gameObject == rag)
-            {
-                ClearRenderTexture(); // Clear the render texture
-            }
+            // Eraser
+            eraserMesh.SetActive(true);
+            // Smoothly move the eraser
+            eraserMesh.transform.position = Vector3.Lerp(eraserMesh.transform.position,
+                                                         targetPos,
+                                                         Time.deltaTime * markerSmoothingSpeed);
+            heroMarker.SetActive(false);
         }
         else
         {
-            previousUV = null;
-            heroMarker.SetActive(false); // Hide the hero marker
-            eraserMesh.SetActive(false); // Hide the eraser mesh
+            // Marker
+            heroMarker.SetActive(true);
+            heroMarker.transform.position = Vector3.Lerp(heroMarker.transform.position,
+                                                         targetPos,
+                                                         Time.deltaTime * markerSmoothingSpeed);
+            eraserMesh.SetActive(false);
         }
     }
+    /// <summary>
+    /// Hide both the pen tip and the eraser meshes completely.
+    /// </summary>
+    private void HideMarkerAndEraser()
+    {
+        heroMarker.SetActive(false);
+        eraserMesh.SetActive(false);
+    }
+
+    #region VR Utility Methods
+
+    private bool GetControllerPosition(OVRInput.Controller controller, out Vector3 position, out Vector3 direction)
+    {
+        // Replace these with your actual tracking transforms if needed.
+        // By default, OVRInput.GetLocalControllerPosition/Rotation returns local-to-centerEye coords.
+        // You might want a real-world position from the OVRCameraRig’s anchor transforms.
+        position = OVRInput.GetLocalControllerPosition(controller);
+        Quaternion rotation = OVRInput.GetLocalControllerRotation(controller);
+        direction = rotation * Vector3.forward;
+        return true; // If you want error checking, do it here
+    }
+
+    #endregion
+
+    #region Drawing Logic (same as first script)
+
     void InitializeRenderTexture()
     {
         if (renderTexture == null)
         {
-            Debug.LogError("RenderTexture was not assigned."); // Log an error if the render texture is not assigned
-        }
-
-        RenderTexture.active = renderTexture; // Set the render texture as active
-
-        if (useFirstImage)
-        {
-            if (firstImage != null)
-            {
-                Graphics.Blit(firstImage, renderTexture); // Load the first image onto the render texture
-                Debug.Log("First run: loaded first image onto render texture.");
-            }
-            else
-            {
-                Debug.LogError("First image not assigned."); // Log an error if the first image is not assigned
-                GL.Clear(true, true, Color.white); // Clear the render texture to white
-            }
-
-            useFirstImage = false; // Ensure this block is only run once (This might have only been needed for my save/load system and could be removed)
-        }
-
-        RenderTexture.active = null; // Release the render texture
-
-        Shader drawShader = Shader.Find("Custom/DrawShader"); // Find the custom draw shader
-        if (drawShader == null)
-        {
-            Debug.LogError("Custom DrawShader not found."); // Log an error if the custom draw shader is not found
+            Debug.LogError("RenderTexture was not assigned.");
             return;
         }
-        drawMaterial = new Material(drawShader); // Create a new material with the draw shader
-        drawMaterial.SetTexture("_MainTex", brushTexture); // Set the brush texture on the draw material
+
+        RenderTexture.active = renderTexture;
+        GL.Clear(true, true, Color.white);
+        RenderTexture.active = null;
+
+        Shader drawShader = Shader.Find("Custom/DrawShader");
+        if (drawShader == null)
+        {
+            Debug.LogError("Custom DrawShader not found.");
+            return;
+        }
+
+        drawMaterial = new Material(drawShader);
+        drawMaterial.SetTexture("_MainTex", brushTexture);
     }
+
     void InitializeDisplayMarkers()
     {
+        // For every marker except the eraser index, set the colored material
         for (int i = 0; i < displayMarkers.Count; i++)
         {
-            if (i != 5) // Skip initializing the material for the eraser
-            {
-                MeshRenderer renderer = displayMarkers[i].GetComponent<MeshRenderer>(); // Get the mesh renderer of the display marker
-                Material markerMaterialInstance = new Material(baseMarkerMaterial); // Create a new material instance from the base marker material
-                markerMaterialInstance.color = colors[i]; // Set the color of the marker material instance
-                renderer.material = markerMaterialInstance; // Assign the material to the renderer
-            }
+            // If index 5 is your eraser, skip coloring
+            if (i == 5) continue;
+
+            MeshRenderer renderer = displayMarkers[i].GetComponent<MeshRenderer>();
+            Material markerMaterialInstance = new Material(baseMarkerMaterial);
+            markerMaterialInstance.color = colors[i];
+            renderer.material = markerMaterialInstance;
         }
     }
+
     void ClearRenderTexture()
     {
-        RenderTexture.active = renderTexture; // Set the render texture as active
-
-        GL.Clear(true, true, Color.white); // Clear the render texture to white
-
-        RenderTexture.active = null; // Release the render texture
+        RenderTexture.active = renderTexture;
+        GL.Clear(true, true, Color.white);
+        RenderTexture.active = null;
     }
-    //Being completely open, ChatGPT wrote this method a long with it's comments.
+
     bool TryGetUVCoordinates(RaycastHit hit, out Vector2 uv)
     {
-        MeshCollider meshCollider = hit.collider as MeshCollider; // Get the mesh collider from the hit
-        uv = Vector2.zero; // Initialize the UV coordinates
-
+        uv = Vector2.zero;
+        MeshCollider meshCollider = hit.collider as MeshCollider;
         if (meshCollider == null || meshCollider.sharedMesh == null)
-        {
-            return false; // Return false if the mesh collider or shared mesh is null
-        }
+            return false;
 
-        Mesh mesh = meshCollider.sharedMesh; // Get the mesh from the mesh collider
-        int[] triangles = mesh.triangles; // Get the triangles of the mesh
-        Vector3[] vertices = mesh.vertices; // Get the vertices of the mesh
-        Vector2[] uvs = mesh.uv; // Get the UVs of the mesh
+        Mesh mesh = meshCollider.sharedMesh;
+        int[] triangles = mesh.triangles;
+        Vector3[] vertices = mesh.vertices;
+        Vector2[] uvs = mesh.uv;
 
-        int triangleIndex = hit.triangleIndex * 3; // Calculate the triangle index
-        Vector3 p0 = vertices[triangles[triangleIndex + 0]]; // Get the first vertex of the triangle
-        Vector3 p1 = vertices[triangles[triangleIndex + 1]]; // Get the second vertex of the triangle
-        Vector3 p2 = vertices[triangles[triangleIndex + 2]]; // Get the third vertex of the triangle
+        int triangleIndex = hit.triangleIndex * 3;
+        Vector3 p0 = vertices[triangles[triangleIndex + 0]];
+        Vector3 p1 = vertices[triangles[triangleIndex + 1]];
+        Vector3 p2 = vertices[triangles[triangleIndex + 2]];
 
-        Vector2 uv0 = uvs[triangles[triangleIndex + 0]]; // Get the first UV coordinate of the triangle
-        Vector2 uv1 = uvs[triangles[triangleIndex + 1]]; // Get the second UV coordinate of the triangle
-        Vector2 uv2 = uvs[triangles[triangleIndex + 2]]; // Get the third UV coordinate of the triangle
+        Vector2 uv0 = uvs[triangles[triangleIndex + 0]];
+        Vector2 uv1 = uvs[triangles[triangleIndex + 1]];
+        Vector2 uv2 = uvs[triangles[triangleIndex + 2]];
 
-        Vector3 barycentric = hit.barycentricCoordinate; // Get the barycentric coordinates of the hit
-        uv = uv0 * barycentric.x + uv1 * barycentric.y + uv2 * barycentric.z; // Calculate the interpolated UV coordinate
-
-        return true; // Return true if the UV coordinates were successfully calculated
+        Vector3 barycentric = hit.barycentricCoordinate;
+        uv = uv0 * barycentric.x + uv1 * barycentric.y + uv2 * barycentric.z;
+        return true;
     }
+
     void Draw(Vector2 textureCoord)
     {
-        RenderTexture.active = renderTexture; // Set the render texture as active
+        RenderTexture.active = renderTexture;
+        GL.PushMatrix();
+        GL.LoadPixelMatrix(0, renderTexture.width, renderTexture.height, 0);
 
-        GL.PushMatrix(); // Save the current matrix
-        GL.LoadPixelMatrix(0, renderTexture.width, renderTexture.height, 0); // Set up the pixel matrix
+        Vector2 brushPos = new Vector2(textureCoord.x * renderTexture.width,
+                                       (1 - textureCoord.y) * renderTexture.height);
 
-        Vector2 brushPos = new Vector2(textureCoord.x * renderTexture.width, (1 - textureCoord.y) * renderTexture.height); // Calculate the brush position in pixel coordinates
-
-        // Set the material to use the correct brush texture and color
-        if (selectedMarker == 5) // Eraser
-        {
-            drawMaterial.SetTexture("_MainTex", eraserTexture); // Set the eraser texture
-        }
+        // If selectedMarker == 5 => eraser
+        if (selectedMarker == 5)
+            drawMaterial.SetTexture("_MainTex", eraserTexture);
         else
-        {
-            drawMaterial.SetTexture("_MainTex", brushTexture); // Set the brush texture
-        }
-        drawMaterial.SetColor("_Color", brushColor); // Ensure color is set here
-        drawMaterial.SetPass(0); // Apply the material pass
+            drawMaterial.SetTexture("_MainTex", brushTexture);
 
-        // Draw the brush texture directly on the render texture
-        Graphics.DrawTexture(new Rect(brushPos.x - brushSize / 2, brushPos.y - brushSize / 2, brushSize, brushSize), drawMaterial.GetTexture("_MainTex"), drawMaterial);
+        drawMaterial.SetColor("_Color", brushColor);
+        drawMaterial.SetPass(0);
 
-        GL.PopMatrix(); // Restore the previous matrix
-        RenderTexture.active = null; // Release the render texture
+        Rect rect = new Rect(brushPos.x - brushSize / 2,
+                             brushPos.y - brushSize / 2,
+                             brushSize, brushSize);
+
+        Graphics.DrawTexture(rect, drawMaterial.GetTexture("_MainTex"), drawMaterial);
+        GL.PopMatrix();
+        RenderTexture.active = null;
     }
 
     void DrawBetween(Vector2 startUV, Vector2 endUV)
     {
-        int steps = Mathf.CeilToInt(Vector2.Distance(startUV, endUV) * smoothSteps); // Calculate the number of steps based on the distance and smooth steps
+        int steps = Mathf.CeilToInt(Vector2.Distance(startUV, endUV) * smoothSteps);
         for (int i = 0; i <= steps; i++)
         {
-            Vector2 interpolatedUV = Vector2.Lerp(startUV, endUV, (float)i / steps); // Interpolate the UV coordinates
-            Draw(interpolatedUV); // Draw at the interpolated UV coordinate
+            Vector2 interpolatedUV = Vector2.Lerp(startUV, endUV, (float)i / steps);
+            Draw(interpolatedUV);
         }
     }
+
+    #endregion
 }

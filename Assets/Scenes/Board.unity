@@ -4288,27 +4288,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3500951267404151563, guid: 4de8213faa23b944da3351ab327b030a, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.8
+      value: 2.5
       objectReference: {fileID: 0}
     - target: {fileID: 3500951267404151563, guid: 4de8213faa23b944da3351ab327b030a, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.8
+      value: 2.5
       objectReference: {fileID: 0}
     - target: {fileID: 3500951267404151563, guid: 4de8213faa23b944da3351ab327b030a, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.8
+      value: 2.5
       objectReference: {fileID: 0}
     - target: {fileID: 3500951267404151563, guid: 4de8213faa23b944da3351ab327b030a, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -0.119
       objectReference: {fileID: 0}
     - target: {fileID: 3500951267404151563, guid: 4de8213faa23b944da3351ab327b030a, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 2
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 3500951267404151563, guid: 4de8213faa23b944da3351ab327b030a, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 1
+      value: 0.998
       objectReference: {fileID: 0}
     - target: {fileID: 3500951267404151563, guid: 4de8213faa23b944da3351ab327b030a, type: 3}
       propertyPath: m_LocalRotation.w
@@ -11730,7 +11730,7 @@ MonoBehaviour:
   useRecommendedMSAALevel: 1
   _monoscopic: 0
   _sharpenType: 0
-  _enableDynamicResolution: 0
+  _enableDynamicResolution: 1
   minDynamicResolutionScale: 1
   maxDynamicResolutionScale: 1
   quest2MinDynamicResolutionScale: 1
@@ -11780,7 +11780,7 @@ MonoBehaviour:
   requestBodyTrackingPermissionOnStartup: 0
   requestFaceTrackingPermissionOnStartup: 0
   requestEyeTrackingPermissionOnStartup: 0
-  requestScenePermissionOnStartup: 0
+  requestScenePermissionOnStartup: 1
   requestRecordAudioPermissionOnStartup: 0
   _localDimming: 1
   _trackingOriginType: 1

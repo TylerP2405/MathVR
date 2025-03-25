@@ -885,7 +885,7 @@ BoxCollider:
     m_Bits: 0
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
-  m_ProvidesContacts: 1
+  m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
@@ -1061,7 +1061,7 @@ MonoBehaviour:
   _targetTransform: {fileID: 794473151}
   _maxGrabPoints: -1
   _rigidbody: {fileID: 794473152}
-  _kinematicWhileSelected: 0
+  _kinematicWhileSelected: 1
   _throwWhenUnselected: 1
 --- !u!1 &70832229
 GameObject:
@@ -8366,7 +8366,7 @@ MonoBehaviour:
   _targetTransform: {fileID: 993855066}
   _maxGrabPoints: -1
   _rigidbody: {fileID: 993855061}
-  _kinematicWhileSelected: 1
+  _kinematicWhileSelected: 0
   _throwWhenUnselected: 1
 --- !u!114 &495550184
 MonoBehaviour:
@@ -11062,7 +11062,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.70710677, z: -0.70710677, w: 0}
   m_LocalPosition: {x: 0, y: -0.01, z: -0.35566}
-  m_LocalScale: {x: 1.4, y: 0.7, z: 1}
+  m_LocalScale: {x: 1.39, y: 0.695, z: 0.99285716}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 33659526}
@@ -11080,7 +11080,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderTexture: {fileID: 8400000, guid: 5467026068204a549a8d13f8980ac424, type: 2}
-  maxDistance: 0.1
+  maxDistance: 0.03
   minBrushDistance: 2
   backGroundColor: {r: 1, g: 1, b: 1, a: 1}
   markerAlpha: 1
@@ -11111,7 +11111,7 @@ BoxCollider:
     m_Bits: 0
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
-  m_ProvidesContacts: 1
+  m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 0.06683946}
@@ -12253,15 +12253,15 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 794473150}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.055268668, y: -0, z: -0, w: 0.99847156}
-  m_LocalPosition: {x: 0.15, y: 0.993, z: 1.104}
+  m_LocalRotation: {x: 0.03981413, y: -0.6925253, z: -0.038333554, w: 0.71927327}
+  m_LocalPosition: {x: 0.152, y: 0.613, z: 1.408}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 2123339103}
   - {fileID: 60950165}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 6.337, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0.24, y: -87.842, z: -6.332}
 --- !u!54 &794473152
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -12270,7 +12270,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 794473150}
   serializedVersion: 4
-  m_Mass: 1
+  m_Mass: 0.2
   m_Drag: 0
   m_AngularDrag: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -12288,7 +12288,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 1
+  m_CollisionDetection: 0
 --- !u!65 &794473153
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -12318,7 +12318,7 @@ MeshRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 794473150}
   m_Enabled: 1
-  m_CastShadows: 1
+  m_CastShadows: 0
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
@@ -14936,6 +14936,7 @@ GameObject:
   - component: {fileID: 993855063}
   - component: {fileID: 993855062}
   - component: {fileID: 993855061}
+  - component: {fileID: 993855067}
   m_Layer: 0
   m_Name: '[BuildingBlock] Cube'
   m_TagString: Untagged
@@ -14965,7 +14966,7 @@ Rigidbody:
     m_Bits: 0
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
@@ -14989,7 +14990,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2, y: 2, z: 2}
+  m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!23 &993855063
 MeshRenderer:
@@ -15071,13 +15072,25 @@ Transform:
   m_GameObject: {fileID: 993855060}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -0.883}
+  m_LocalPosition: {x: 0, y: 1.648, z: -1.454}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 495550180}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &993855067
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 993855060}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 358cbd2353c662a42bb45a99d6772cc0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &994867011
 GameObject:
   m_ObjectHideFlags: 0
@@ -16643,31 +16656,31 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 25c12d27ecbffd640b98d160599c7b77, type: 3}
       propertyPath: m_LocalRotation.w
-      value: -0.0029638554
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 25c12d27ecbffd640b98d160599c7b77, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.0029270647
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 25c12d27ecbffd640b98d160599c7b77, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.7189832
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 25c12d27ecbffd640b98d160599c7b77, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.695015
+      value: -0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 25c12d27ecbffd640b98d160599c7b77, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
-      value: 88
+      value: 90
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 25c12d27ecbffd640b98d160599c7b77, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 193.81
+      value: 180
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 25c12d27ecbffd640b98d160599c7b77, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 13.807
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 25c12d27ecbffd640b98d160599c7b77, type: 3}
       propertyPath: m_ConstrainProportionsScale

@@ -1,6 +1,8 @@
-using Oculus. Interaction;
-using Oculus. Interaction. Input; using System.Collections;
-using System.Collections.Generic; using UnityEngine;
+using Oculus.Interaction;
+using Oculus.Interaction.Input; 
+using System.Collections;
+using System.Collections.Generic; 
+using UnityEngine;
 using Oculus.Haptics;
 
 public class TriggerHapticOnGrab : MonoBehaviour

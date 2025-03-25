@@ -957,6 +957,7 @@ GameObject:
   - component: {fileID: 60950166}
   - component: {fileID: 60950170}
   - component: {fileID: 60950169}
+  - component: {fileID: 60950171}
   m_Layer: 0
   m_Name: ISDK_HandGrabInteraction
   m_TagString: Untagged
@@ -1143,6 +1144,23 @@ MonoBehaviour:
   _targetTransform: {fileID: 794473151}
   _underlyingTargetTransform: {fileID: 901408831}
   _filterStrength: 0.4
+--- !u!114 &60950171
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 60950164}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16cf647565c5bd54b9fd28ae7f7053ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hapticClip: {fileID: 2460798210113038985, guid: e10f539385918f944b5c3c9f15e6067b, type: 3}
+  duration: 0.2
+  amplitude: 0.53
+  frequency: 0.762
+  grabInteractable: {fileID: 60950166}
 --- !u!1 &70832229
 GameObject:
   m_ObjectHideFlags: 0

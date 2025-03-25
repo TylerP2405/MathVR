@@ -11261,6 +11261,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05d36dde835e14743be6f979bbdf040f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  hapticClip: {fileID: 2460798210113038985, guid: e10f539385918f944b5c3c9f15e6067b, type: 3}
   renderTexture: {fileID: 8400000, guid: 5467026068204a549a8d13f8980ac424, type: 2}
   maxDistance: 0.03
   minBrushDistance: 2

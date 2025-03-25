@@ -2,9 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Oculus.Interaction;
+using Oculus.Haptics;
+
+
 //using BNG; // only needed if using VR Interaction Framework
 public class WhiteBoardGL : MonoBehaviour
 {
+    // Custom Haptic
+    public HapticClip hapticClip;
+    private HapticClipPlayer clipPlayer;
+
+
+    //
     [Tooltip("The Render Texture to draw on")]
     public RenderTexture renderTexture;
     [Header("BrushSettings")]
@@ -46,6 +55,9 @@ public class WhiteBoardGL : MonoBehaviour
 
     private void Start()
     {
+        // Init haptic
+        clipPlayer = new HapticClipPlayer(hapticClip);
+
         // Initialize the brush material with a simple shader
         brushMaterial = new Material(Shader.Find("Hidden/Internal-Colored"));
 
@@ -194,6 +206,11 @@ public class WhiteBoardGL : MonoBehaviour
 
     private void DrawAtPosition(Vector2 position, Color color, float sizeX, float sizeY, float rotationAngle)
     {
+        // Add haptic
+        clipPlayer.Play(Oculus.Haptics.Controller.Right);
+
+        //
+
         GL.PushMatrix();
         GL.LoadPixelMatrix(0, renderTexture.width, renderTexture.height, 0);
 

@@ -15032,8 +15032,8 @@ MonoBehaviour:
   - brushGrabbable: {fileID: 321031474}
     brushTransform: {fileID: 96012115}
     color: {r: 0, g: 0, b: 0, a: 0}
-    sizeY: 2
-    sizeX: 7
+    sizeY: 5
+    sizeX: 5
     isEraser: 0
     lastPosition: {x: 0, y: 0}
     isFirstDraw: 0
@@ -23483,8 +23483,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0.055268668, y: -0, z: -0, w: 0.99847156}
   m_LocalPosition: {x: 0.0013934963, y: 0.774, z: -0.1486}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 96012115}
   - {fileID: 321031471}

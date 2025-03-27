@@ -21718,7 +21718,7 @@ MonoBehaviour:
   SyncScale: 0
   SyncParent: 0
   _autoAOIOverride: 1
-  DisableSharedModeInterpolation: 0
+  DisableSharedModeInterpolation: 1
 --- !u!114 &794473157
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -59359,6 +59359,10 @@ GameObject:
   - component: {fileID: 8562625290899751624}
   - component: {fileID: 8562625290899751625}
   - component: {fileID: 8562625290899751626}
+  - component: {fileID: 8562625290899751630}
+  - component: {fileID: 8562625290899751629}
+  - component: {fileID: 8562625290899751628}
+  - component: {fileID: 8562625290899751627}
   m_Layer: 0
   m_Name: eraser
   m_TagString: Untagged
@@ -59459,6 +59463,68 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.46650052, y: 0.17308116, z: 0.07779362}
   m_Center: {x: 0, y: 0.00000010430813, z: -0.039270047}
+--- !u!114 &8562625290899751627
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7914075952436781853}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _stateAuthorityChangeErrorCorrectionDelta: 0
+  SyncScale: 0
+  SyncParent: 0
+  _autoAOIOverride: 1
+  DisableSharedModeInterpolation: 1
+--- !u!114 &8562625290899751628
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7914075952436781853}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b72e9ba2c21430c818f53e1079c2a93, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &8562625290899751629
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7914075952436781853}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SortKey: 3069842605
+  ObjectInterest: 1
+  Flags: 524289
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 8562625290899751628}
+  - {fileID: 8562625290899751627}
+  ForceRemoteRenderTimeframe: 0
+--- !u!114 &8562625290899751630
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7914075952436781853}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 413bd4e9cbbc96b46ac5a1d62a4105d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  UseGravity: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

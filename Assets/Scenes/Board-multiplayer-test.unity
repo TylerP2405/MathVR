@@ -20,13 +20,13 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
-  m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
-  m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
-  m_AmbientIntensity: 1
+  m_AmbientSkyColor: {r: 0.6588038, g: 0.73307455, b: 0.78113204, a: 1}
+  m_AmbientEquatorColor: {r: 0.56857955, g: 0.613949, b: 0.645283, a: 1}
+  m_AmbientGroundColor: {r: 0.14716971, g: 0.14716971, b: 0.14716971, a: 1}
+  m_AmbientIntensity: 0.8
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 2100000, guid: e6dc7e1d6e8297144b7dc00dce90d7af, type: 2}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 378e6f5b30ae67c4da6848fcb2f8b455, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -93,8 +93,8 @@ LightmapSettings:
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
-  m_LightingDataAsset: {fileID: 20201, guid: 0000000000000000f000000000000000, type: 0}
-  m_LightingSettings: {fileID: 0}
+  m_LightingDataAsset: {fileID: 112000000, guid: 5256dd636a1365c46a0b34230cc4e350, type: 2}
+  m_LightingSettings: {fileID: 4890085278179872738, guid: 0122557ac9f0d0b449793f6feecef5ca, type: 2}
 --- !u!196 &4
 NavMeshSettings:
   serializedVersion: 2
@@ -1329,7 +1329,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &58049450
 Transform:
@@ -1390,7 +1390,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 761d8e1f988ed2345a28312145c79c6e, type: 2}
+  - {fileID: 2100000, guid: 6961428059f782e42b6a7c24fb04c9ec, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -3336,6 +3336,71 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1750494190}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &122448514
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 122448516}
+  - component: {fileID: 122448515}
+  m_Layer: 0
+  m_Name: Reflection Probe
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!215 &122448515
+ReflectionProbe:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 122448514}
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Type: 0
+  m_Mode: 0
+  m_RefreshMode: 0
+  m_TimeSlicingMode: 0
+  m_Resolution: 128
+  m_UpdateFrequency: 0
+  m_BoxSize: {x: 10, y: 10, z: 10}
+  m_BoxOffset: {x: 0, y: 0, z: 0}
+  m_NearClip: 0.3
+  m_FarClip: 1000
+  m_ShadowDistance: 100
+  m_ClearFlags: 1
+  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IntensityMultiplier: 1
+  m_BlendDistance: 1
+  m_HDR: 1
+  m_BoxProjection: 0
+  m_RenderDynamicObjects: 0
+  m_UseOcclusionCulling: 1
+  m_Importance: 1
+  m_CustomBakedTexture: {fileID: 0}
+--- !u!4 &122448516
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 122448514}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.259, y: 5.63, z: -2.487}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &124978713
 GameObject:
@@ -5488,8 +5553,8 @@ Light:
   m_Enabled: 1
   serializedVersion: 11
   m_Type: 1
-  m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
-  m_Intensity: 1
+  m_Color: {r: 1, g: 0.9948244, b: 0.9339622, a: 1}
+  m_Intensity: 1.5
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -5551,13 +5616,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 188431031}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
+  m_LocalRotation: {x: 0.5304708, y: -0.046376266, z: 0.14735992, w: 0.83350766}
   m_LocalPosition: {x: -0.636, y: 3.389, z: -5.911}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+  m_LocalEulerAnglesHint: {x: 63.893, y: 10.346, z: 26.514}
 --- !u!114 &188431034
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9425,6 +9490,14 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: b4bd519ba77d655419e9385940c2d7a9, type: 3}
       propertyPath: m_Name
       value: classroomosingleobject
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: b4bd519ba77d655419e9385940c2d7a9, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
+    - target: {fileID: 8164078558771037576, guid: b4bd519ba77d655419e9385940c2d7a9, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -19054,7 +19127,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   hapticClip: {fileID: 2460798210113038985, guid: e10f539385918f944b5c3c9f15e6067b, type: 3}
   renderTexture: {fileID: 8400000, guid: 5467026068204a549a8d13f8980ac424, type: 2}
-  maxDistance: 0.03
+  maxDistance: 0.014
   minBrushDistance: 2
   backGroundColor: {r: 1, g: 1, b: 1, a: 1}
   markerAlpha: 1
@@ -19063,8 +19136,8 @@ MonoBehaviour:
   - brushGrabbable: {fileID: 60950168}
     brushTransform: {fileID: 2123339103}
     color: {r: 0, g: 0, b: 0, a: 0}
-    sizeY: 4
-    sizeX: 4
+    sizeY: 3
+    sizeX: 3
     isEraser: 0
     lastPosition: {x: 0, y: 0}
     isFirstDraw: 0
@@ -19072,7 +19145,7 @@ MonoBehaviour:
   - brushGrabbable: {fileID: 1211096042}
     brushTransform: {fileID: 1313733987}
     color: {r: 0, g: 0, b: 0, a: 0}
-    sizeY: 60
+    sizeY: 50
     sizeX: 120
     isEraser: 1
     lastPosition: {x: 0, y: 0}
@@ -59551,3 +59624,4 @@ SceneRoots:
   - {fileID: 1751109773}
   - {fileID: 993516043}
   - {fileID: 1582819550}
+  - {fileID: 122448516}

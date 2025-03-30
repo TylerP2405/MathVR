@@ -131,6 +131,7 @@ public class VRInteractiveButton : MonoBehaviour
             Debug.Log("Extracted LaTeX: " + latex);
             Debug.Log($"Mathpix Confidence: {confidence * 100f:0.00}%");
 
+            //Uncomment for gemini, but need to test mathpix first
             //StartCoroutine(SendLatexToGemini(latex));
         }
         else

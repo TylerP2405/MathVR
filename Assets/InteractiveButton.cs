@@ -1,6 +1,18 @@
 using UnityEngine;
 using UnityEngine.Networking;
 using System.Collections;
+using System.Collections.Generic;
+using Newtonsoft.Json;
+using System.Text.RegularExpressions;
+
+
+[System.Serializable]
+public class MathpixWord
+{
+    public string type;
+    public string text;
+    public string latex;
+}
 
 [System.Serializable]
 public class MathpixResponse
@@ -8,6 +20,7 @@ public class MathpixResponse
     public string text;
     public string latex_styled;
     public float confidence;
+    public List<MathpixWord> word_data;
 }
 
 public class VRInteractiveButton : MonoBehaviour
@@ -26,7 +39,6 @@ public class VRInteractiveButton : MonoBehaviour
 
     [Header("Gemini API Settings")]
     [SerializeField] private string geminiApiKey = "AIzaSyDeYukkUW8P1HvUxy4M1pQ3toV2l5NxPlU";
-
 
     private bool isPressed = false;
 
@@ -96,80 +108,119 @@ public class VRInteractiveButton : MonoBehaviour
     }
 
     private IEnumerator SendImageToMathpix(byte[] imageBytes)
-{
-    string mathpixUrl = "https://api.mathpix.com/v3/text";
-
-    WWWForm form = new WWWForm();
-    form.AddBinaryData("file", imageBytes, "whiteboard.png", "image/png");
-
-    string optionsJson = "{\"math_inline_delimiters\": [\"$\", \"$\"], \"rm_spaces\": true, \"formats\": [\"text\"]}";
-    form.AddField("options_json", optionsJson);
-
-    UnityWebRequest request = UnityWebRequest.Post(mathpixUrl, form);
-    request.SetRequestHeader("app_id", appId);    
-    request.SetRequestHeader("app_key", appKey);   
-
-    Debug.Log("Sending request to Mathpix...");
-
-    yield return request.SendWebRequest();
-
-    if (request.result != UnityWebRequest.Result.Success)
     {
-        Debug.LogError("Mathpix API Error: " + request.error);
-    }
-    else
-    {
-        string response = request.downloadHandler.text;
-        Debug.Log("Mathpix Response:\n" + response);
-        MathpixResponse parsed = JsonUtility.FromJson<MathpixResponse>(response);
+        string mathpixUrl = "https://api.mathpix.com/v3/text";
 
-        if (parsed != null)
+        WWWForm form = new WWWForm();
+        form.AddBinaryData("file", imageBytes, "whiteboard.png", "image/png");
+
+        string optionsJson = "{\"math_inline_delimiters\": [\"$\", \"$\"], \"rm_spaces\": true, \"formats\": [\"latex_styled\", \"text\"], \"word_data\": true}";
+        form.AddField("options_json", optionsJson);
+
+        UnityWebRequest request = UnityWebRequest.Post(mathpixUrl, form);
+        request.SetRequestHeader("app_id", appId);    
+        request.SetRequestHeader("app_key", appKey);   
+
+        Debug.Log("Sending request to Mathpix...");
+        yield return request.SendWebRequest();
+
+        if (request.result != UnityWebRequest.Result.Success)
         {
-            string latex = parsed.latex_styled?.Replace("\\\\", "\\") ?? "";
-            float confidence = parsed.confidence;
+            Debug.LogError("Mathpix API Error: " + request.error);
+        }
+        else
+        {
+            string response = request.downloadHandler.text;
+            Debug.Log("Mathpix Response:\n" + response);
 
-            Debug.Log("Extracted LaTeX: " + latex);
-            Debug.Log($"Mathpix Confidence: {confidence * 100f:0.00}%");
+            MathpixResponse parsed = JsonConvert.DeserializeObject<MathpixResponse>(response);
 
-            //Uncomment for gemini, but need to test mathpix first
+            string latex = "";
+
+        // Try extracting math from word_data
+        if (parsed.word_data != null && parsed.word_data.Count > 0)
+        {
+            latex = BuildFullPromptFromWordData(parsed.word_data);
+            if (!string.IsNullOrWhiteSpace(latex))
+            {
+                Debug.Log("Extracted math LaTeX from word_data: " + latex);
+            }
+        }
+
+        // If no math from word_data, fallback to latex_styled
+        if (string.IsNullOrWhiteSpace(latex) && !string.IsNullOrWhiteSpace(parsed.latex_styled))
+        {
+            latex = parsed.latex_styled.Replace("\\\\", "\\");
+            Debug.Log("Fallback to latex_styled: " + latex);
+        }
+
+        // Final validation: only send if it's actual math
+        if (!string.IsNullOrWhiteSpace(latex) && Regex.IsMatch(latex, @"(\\[a-zA-Z]+|[a-zA-Z]|\d).{2,}"))
+        {
+            Debug.Log("Valid math equation found: " + latex);
+
+            // Uncommnet when Mathpix is good.
             //StartCoroutine(SendLatexToGemini(latex));
         }
         else
         {
-            Debug.LogError("Failed to parse Mathpix response.");
+            Debug.LogWarning("No valid math equation found — skipping request.");
+        }
+
+                }
+    }
+
+    private string BuildFullPromptFromWordData(List<MathpixWord> words)
+{
+    var parts = new List<string>();
+
+    foreach (var word in words)
+    {
+        if (!string.IsNullOrEmpty(word.latex))
+        {
+            if (word.type == "math")
+            {
+                parts.Add($"\\[{word.latex}\\]");
+            }
+            else // type == "text"
+            {
+                parts.Add(word.latex); // Keep as LaTeX \text{...}
+            }
         }
     }
+
+    return string.Join(" ", parts);
 }
 
-private IEnumerator SendLatexToGemini(string latex)
-{
-    string geminiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={geminiApiKey}";
 
-    string prompt = $"Solve this problem step by step and make sure the step by step is not too long:\n\n{latex}";
-
-    string jsonBody = "{\"contents\": [{\"parts\": [{\"text\": \"" + EscapeJson(prompt) + "\"}]}]}";
-
-    UnityWebRequest request = new UnityWebRequest(geminiUrl, "POST");
-    byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
-    request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-    request.downloadHandler = new DownloadHandlerBuffer();
-
-    request.SetRequestHeader("Content-Type", "application/json");
-
-    Debug.Log("Sending LaTeX to Gemini...");
-    yield return request.SendWebRequest();
-
-    if (request.result != UnityWebRequest.Result.Success)
+    private IEnumerator SendLatexToGemini(string latex)
     {
-        Debug.LogError("Gemini API Error: " + request.error);
+        string geminiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={geminiApiKey}";
+
+        string prompt = $"Solve this math problem with short step-by-step explanation using LaTeX formatting:\n\n{latex}";
+        string jsonBody = "{\"contents\": [{\"parts\": [{\"text\": \"" + EscapeJson(prompt) + "\"}]}]}";
+
+        UnityWebRequest request = new UnityWebRequest(geminiUrl, "POST");
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
+        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/json");
+
+        Debug.Log("Sending LaTeX to Gemini...");
+        yield return request.SendWebRequest();
+
+        if (request.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError("Gemini API Error: " + request.error);
+        }
+        else
+        {
+            string result = request.downloadHandler.text;
+            Debug.Log("Gemini Response:\n" + result);
+        }
     }
-    else
-    {
-        string result = request.downloadHandler.text;
-        Debug.Log("Gemini Response:\n" + result);
-    }
-}
- private string EscapeJson(string input)
+
+    private string EscapeJson(string input)
     {
         return input.Replace("\\", "\\\\").Replace("\"", "\\\"");
     }

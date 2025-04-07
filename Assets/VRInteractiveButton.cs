@@ -54,7 +54,7 @@ public class VRInteractiveButton : MonoBehaviour
         }
     }
 
-    void Update()
+    /*void Update()
     {
         if (GetControllerRaycast(rightHand, out RaycastHit hit))
         {
@@ -63,6 +63,10 @@ public class VRInteractiveButton : MonoBehaviour
                 OnButtonPressed();
             }
         }
+    }*/
+    public void TriggerButtonFromTouch()
+    {
+        OnButtonPressed();
     }
 
     void OnButtonPressed()

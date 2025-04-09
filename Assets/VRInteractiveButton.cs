@@ -1,0 +1,231 @@
+using UnityEngine;
+using UnityEngine.Networking;
+using System.Collections;
+using System.Collections.Generic;
+using Newtonsoft.Json;
+using System.Text.RegularExpressions;
+
+
+[System.Serializable]
+public class MathpixWord
+{
+    public string type;
+    public string text;
+    public string latex;
+}
+
+[System.Serializable]
+public class MathpixResponse
+{
+    public string text;
+    public string latex_styled;
+    public float confidence;
+    public List<MathpixWord> word_data;
+}
+
+public class VRInteractiveButton : MonoBehaviour
+{
+    [Header("VR Controller Settings")]
+    [SerializeField] private OVRInput.Controller rightHand = OVRInput.Controller.RTouch;
+    [SerializeField] private OVRInput.Controller leftHand = OVRInput.Controller.LTouch;
+
+    private Renderer buttonRenderer;
+    private Color defaultColor;
+    private WhiteboardCapture whiteboardCapture;
+
+    [Header("Mathpix API Settings")]
+    [SerializeField] private string appId = "mathvr_cb7ea5_cb157f";   
+    [SerializeField] private string appKey = "4d52d29ed99f7cd04f4382adcf5ff0be75df806dda0eeb4c9cfe0cc045827b72"; 
+
+    [Header("Gemini API Settings")]
+    [SerializeField] private string geminiApiKey = "AIzaSyDeYukkUW8P1HvUxy4M1pQ3toV2l5NxPlU";
+
+    private bool isPressed = false;
+
+    void Start()
+    {
+        buttonRenderer = GetComponent<Renderer>();
+        defaultColor = buttonRenderer.material.color;
+
+        whiteboardCapture = FindObjectOfType<WhiteboardCapture>();
+        if (whiteboardCapture == null)
+        {
+            Debug.LogError("Could not find a WhiteboardCapture component in the scene!");
+        }
+    }
+
+    /*void Update()
+    {
+        if (GetControllerRaycast(rightHand, out RaycastHit hit))
+        {
+            if (hit.collider.gameObject == gameObject && OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, rightHand))
+            {
+                OnButtonPressed();
+            }
+        }
+    }*/
+    public void TriggerButtonFromTouch()
+    {
+        OnButtonPressed();
+    }
+
+    void OnButtonPressed()
+    {
+        if (isPressed) return;
+        isPressed = true;
+
+        Debug.Log("Solve Button Pressed!");
+        buttonRenderer.material.color = Color.red;
+
+        if (whiteboardCapture == null) return;
+
+        byte[] boardImage = whiteboardCapture.CaptureBoardToByteArray();
+
+        if (boardImage != null)
+        {
+            Debug.Log("Chalkboard captured. Byte array length: " + boardImage.Length);
+            whiteboardCapture.SaveBoardToFile("WhiteboardCapture.png");
+
+            StartCoroutine(SendImageToMathpix(boardImage));
+        }
+        else
+        {
+            Debug.LogError("Board image capture failed. Bytes are null.");
+        }
+
+        Invoke(nameof(ResetColor), 2f);
+    }
+
+    void ResetColor()
+    {
+        buttonRenderer.material.color = defaultColor;
+        isPressed = false;
+    }
+
+    private bool GetControllerRaycast(OVRInput.Controller controller, out RaycastHit hit)
+    {
+        Vector3 position = OVRInput.GetLocalControllerPosition(controller);
+        Quaternion rotation = OVRInput.GetLocalControllerRotation(controller);
+        Vector3 direction = rotation * Vector3.forward;
+
+        return Physics.Raycast(position, direction, out hit, 5f);
+    }
+
+    private IEnumerator SendImageToMathpix(byte[] imageBytes)
+    {
+        string mathpixUrl = "https://api.mathpix.com/v3/text";
+
+        WWWForm form = new WWWForm();
+        form.AddBinaryData("file", imageBytes, "whiteboard.png", "image/png");
+
+        string optionsJson = "{\"math_inline_delimiters\": [\"$\", \"$\"], \"rm_spaces\": true, \"formats\": [\"latex_styled\", \"text\"], \"word_data\": true}";
+        form.AddField("options_json", optionsJson);
+
+        UnityWebRequest request = UnityWebRequest.Post(mathpixUrl, form);
+        request.SetRequestHeader("app_id", appId);    
+        request.SetRequestHeader("app_key", appKey);   
+
+        Debug.Log("Sending request to Mathpix...");
+        yield return request.SendWebRequest();
+
+        if (request.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError("Mathpix API Error: " + request.error);
+        }
+        else
+        {
+            string response = request.downloadHandler.text;
+            Debug.Log("Mathpix Response:\n" + response);
+
+            MathpixResponse parsed = JsonConvert.DeserializeObject<MathpixResponse>(response);
+
+            string latex = "";
+
+        // Try extracting math from word_data
+        if (parsed.word_data != null && parsed.word_data.Count > 0)
+        {
+            latex = BuildFullPromptFromWordData(parsed.word_data);
+            if (!string.IsNullOrWhiteSpace(latex))
+            {
+                Debug.Log("Extracted math LaTeX from word_data: " + latex);
+            }
+        }
+
+        // If no math from word_data, fallback to latex_styled
+        if (string.IsNullOrWhiteSpace(latex) && !string.IsNullOrWhiteSpace(parsed.latex_styled))
+        {
+            latex = parsed.latex_styled.Replace("\\\\", "\\");
+            Debug.Log("Fallback to latex_styled: " + latex);
+        }
+
+        // Final validation: only send if it's actual math
+        if (!string.IsNullOrWhiteSpace(latex) && Regex.IsMatch(latex, @"(\\[a-zA-Z]+|[a-zA-Z]|\d).{2,}"))
+        {
+            Debug.Log("Valid math equation found: " + latex);
+
+            // Uncommnet when Mathpix is good.
+            //StartCoroutine(SendLatexToGemini(latex));
+        }
+        else
+        {
+            Debug.LogWarning("No valid math equation found — skipping request.");
+        }
+
+                }
+    }
+
+    private string BuildFullPromptFromWordData(List<MathpixWord> words)
+{
+    var parts = new List<string>();
+
+    foreach (var word in words)
+    {
+        if (!string.IsNullOrEmpty(word.latex))
+        {
+            if (word.type == "math")
+            {
+                parts.Add($"\\[{word.latex}\\]");
+            }
+            else // type == "text"
+            {
+                parts.Add(word.latex); // Keep as LaTeX \text{...}
+            }
+        }
+    }
+
+    return string.Join(" ", parts);
+}
+
+
+    private IEnumerator SendLatexToGemini(string latex)
+    {
+        string geminiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={geminiApiKey}";
+
+        string prompt = $"Solve this math problem with short step-by-step explanation using LaTeX formatting:\n\n{latex}";
+        string jsonBody = "{\"contents\": [{\"parts\": [{\"text\": \"" + EscapeJson(prompt) + "\"}]}]}";
+
+        UnityWebRequest request = new UnityWebRequest(geminiUrl, "POST");
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
+        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/json");
+
+        Debug.Log("Sending LaTeX to Gemini...");
+        yield return request.SendWebRequest();
+
+        if (request.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError("Gemini API Error: " + request.error);
+        }
+        else
+        {
+            string result = request.downloadHandler.text;
+            Debug.Log("Gemini Response:\n" + result);
+        }
+    }
+
+    private string EscapeJson(string input)
+    {
+        return input.Replace("\\", "\\\\").Replace("\"", "\\\"");
+    }
+}

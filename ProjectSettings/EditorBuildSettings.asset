@@ -11,8 +11,14 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Board-test.unity
     guid: 04f6356ff23dde049adfe4315285a5af
+  - enabled: 1
+    path: Assets/Scenes/Board-multiplayer-test.unity
+    guid: 6a5c3e5c2f6b4cf4bb78f390f15081e4
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: 521f23ff02f3e3c45a9cf66dbfdb0ed4, type: 2}
+    UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: d0d9ffc803cbb47eba9b775829b62fa5, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+    com.unity.xr.arfoundation.simulation_settings: {fileID: 11400000, guid: 81a3dca5d9d3f40a48d16f9f5c124162, type: 2}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 602708ec7a0553c4587fcbc8400f1d02, type: 2}
+    com.unity.xr.openxr.settings4: {fileID: 11400000, guid: 286187dbb394e4c9db62d72eb63d3a31, type: 2}
   m_UseUCBPForAssetBundles: 0

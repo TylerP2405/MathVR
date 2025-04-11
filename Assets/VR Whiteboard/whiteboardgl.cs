@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using Oculus.Interaction;
 using Oculus.Haptics;
+using Fusion;
 
 
 //using BNG; // only needed if using VR Interaction Framework
-public class WhiteBoardGL : MonoBehaviour
+public class WhiteBoardGL : NetworkBehaviour
 {
     // Custom Haptic
     public HapticClip hapticClip;

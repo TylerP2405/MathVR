@@ -164,7 +164,7 @@ public class VRInteractiveButton : MonoBehaviour
             Debug.Log("Valid math equation found: " + latex);
 
             // Uncommnet when Mathpix is good.
-            //StartCoroutine(SendLatexToGemini(latex));
+            StartCoroutine(SendLatexToGemini(latex));
         }
         else
         {

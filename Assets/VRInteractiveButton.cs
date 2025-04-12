@@ -201,7 +201,12 @@ public class VRInteractiveButton : MonoBehaviour
     {
         string geminiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={geminiApiKey}";
 
-        string prompt = $"Solve this math problem with short step-by-step explanation using LaTeX formatting:\n\n{latex}";
+        string prompt = string prompt = 
+"Return the solution as a valid LaTeX .tex file with step-by-step explanation. " +
+"Wrap the entire response in LaTeX document syntax using \\documentclass and \\begin{{document}} ... \\end{{document}}. " +
+"Use display math mode (\\[ ... \\]) for all math.\n\n" +
+$"{latex}";
+
         string jsonBody = "{\"contents\": [{\"parts\": [{\"text\": \"" + EscapeJson(prompt) + "\"}]}]}";
 
         UnityWebRequest request = new UnityWebRequest(geminiUrl, "POST");

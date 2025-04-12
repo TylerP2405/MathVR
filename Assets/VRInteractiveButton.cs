@@ -22,6 +22,10 @@ public class MathpixResponse
     public float confidence;
     public List<MathpixWord> word_data;
 }
+[System.Serializable] public class GeminiPart { public string text; }
+[System.Serializable] public class GeminiContent { public List<GeminiPart> parts; }
+[System.Serializable] public class GeminiCandidate { public GeminiContent content; }
+[System.Serializable] public class GeminiResponse { public List<GeminiCandidate> candidates; }
 
 public class VRInteractiveButton : MonoBehaviour
 {
@@ -197,37 +201,86 @@ public class VRInteractiveButton : MonoBehaviour
 }
 
 
-    private IEnumerator SendLatexToGemini(string latex)
+private string lastLatexTex; 
+
+private IEnumerator SendLatexToGemini(string latex)
+{
+    string geminiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={geminiApiKey}";
+
+    string prompt = 
+        "Return the solution as a valid LaTeX .tex file with step-by-step explanation. " +
+        "Wrap the entire response in LaTeX document syntax using \\documentclass and \\begin{{document}} ... \\end{{document}}. " +
+        "Use display math mode (\\[ ... \\]) for all math.\n\n" +
+        latex;
+
+    string jsonBody = "{\"contents\": [{\"parts\": [{\"text\": \"" + EscapeJson(prompt) + "\"}]}]}";
+
+    UnityWebRequest request = new UnityWebRequest(geminiUrl, "POST");
+    byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
+    request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+    request.downloadHandler = new DownloadHandlerBuffer();
+    request.SetRequestHeader("Content-Type", "application/json");
+
+    Debug.Log("Sending LaTeX to Gemini...");
+    yield return request.SendWebRequest();
+
+    if (request.result != UnityWebRequest.Result.Success)
     {
-        string geminiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={geminiApiKey}";
-
-        string prompt = string prompt = 
-"Return the solution as a valid LaTeX .tex file with step-by-step explanation. " +
-"Wrap the entire response in LaTeX document syntax using \\documentclass and \\begin{{document}} ... \\end{{document}}. " +
-"Use display math mode (\\[ ... \\]) for all math.\n\n" +
-$"{latex}";
-
-        string jsonBody = "{\"contents\": [{\"parts\": [{\"text\": \"" + EscapeJson(prompt) + "\"}]}]}";
-
-        UnityWebRequest request = new UnityWebRequest(geminiUrl, "POST");
-        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
-        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-        request.downloadHandler = new DownloadHandlerBuffer();
-        request.SetRequestHeader("Content-Type", "application/json");
-
-        Debug.Log("Sending LaTeX to Gemini...");
-        yield return request.SendWebRequest();
-
-        if (request.result != UnityWebRequest.Result.Success)
-        {
-            Debug.LogError("Gemini API Error: " + request.error);
-        }
-        else
-        {
-            string result = request.downloadHandler.text;
-            Debug.Log("Gemini Response:\n" + result);
-        }
+        Debug.LogError("Gemini API Error: " + request.error);
     }
+    else
+    {
+        string result = request.downloadHandler.text;
+        Debug.Log("Gemini Response JSON:\n" + result);
+
+        // Deserialize Gemini response and extract the LaTeX .tex file text
+        GeminiResponse gemini = JsonConvert.DeserializeObject<GeminiResponse>(result);
+        lastLatexTex = gemini.candidates[0].content.parts[0].text;
+
+        Debug.Log("Extracted LaTeX .tex content:\n" + lastLatexTex);
+
+        StartCoroutine(SendLatexToLatexOnHTTP(lastLatexTex));
+    }
+}
+
+
+private IEnumerator SendLatexToLatexOnHTTP(string texContent)
+{
+    // Send to LaTeX-on-HTTP
+    var requestData = new
+    {
+        compiler = "pdflatex",
+        resources = new[] {
+            new {
+                main = true,
+                content = texContent
+            }
+        }
+    };
+
+    string json = JsonConvert.SerializeObject(requestData);
+    UnityWebRequest request = new UnityWebRequest("https://latex.ytotech.com/builds/sync", "POST");
+    byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
+    request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+    request.downloadHandler = new DownloadHandlerBuffer();
+    request.SetRequestHeader("Content-Type", "application/json");
+
+    Debug.Log("Sending full LaTeX document to LaTeX-on-HTTP...");
+    yield return request.SendWebRequest();
+
+    if (request.result == UnityWebRequest.Result.Success)
+    {
+        byte[] pdfBytes = request.downloadHandler.data;
+        string path = Path.Combine(Application.temporaryCachePath, "GeneratedFromGemini.pdf");
+        System.IO.File.WriteAllBytes(path, pdfBytes);
+        Debug.Log($"PDF saved to: {path}");
+    }
+    else
+    {
+        Debug.LogError("LaTeX-on-HTTP Error: " + request.error);
+        Debug.LogError(request.downloadHandler.text);
+    }
+}
 
     private string EscapeJson(string input)
     {

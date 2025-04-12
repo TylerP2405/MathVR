@@ -4,6 +4,8 @@ using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
+using System.IO;
+
 
 
 [System.Serializable]
@@ -206,14 +208,17 @@ private string lastLatexTex;
 private IEnumerator SendLatexToGemini(string latex)
 {
     string geminiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={geminiApiKey}";
+    
+    latex = Regex.Replace(latex, @"\r?\n", "\n"); 
 
     string prompt = 
-        "Return the solution as a valid LaTeX .tex file with step-by-step explanation. " +
-        "Wrap the entire response in LaTeX document syntax using \\documentclass and \\begin{{document}} ... \\end{{document}}. " +
-        "Use display math mode (\\[ ... \\]) for all math.\n\n" +
+        "Solve the following math problem with a clear step-by-step explanation. " +
+        "Use LaTeX formatting and display math mode (\\[ ... \\]) for all equations. " +
+        "Do NOT include \\documentclass or \\begin{document} — just provide the explanation body.\n\n" +
         latex;
 
     string jsonBody = "{\"contents\": [{\"parts\": [{\"text\": \"" + EscapeJson(prompt) + "\"}]}]}";
+
 
     UnityWebRequest request = new UnityWebRequest(geminiUrl, "POST");
     byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
@@ -235,7 +240,9 @@ private IEnumerator SendLatexToGemini(string latex)
 
         // Deserialize Gemini response and extract the LaTeX .tex file text
         GeminiResponse gemini = JsonConvert.DeserializeObject<GeminiResponse>(result);
-        lastLatexTex = gemini.candidates[0].content.parts[0].text;
+        string rawContent = gemini.candidates[0].content.parts[0].text;
+        rawContent = rawContent.Replace(@"\end{document}", ""); 
+        lastLatexTex = WrapInLatexDocument(rawContent);
 
         Debug.Log("Extracted LaTeX .tex content:\n" + lastLatexTex);
 
@@ -287,3 +294,26 @@ private IEnumerator SendLatexToLatexOnHTTP(string texContent)
         return input.Replace("\\", "\\\\").Replace("\"", "\\\"");
     }
 }
+private string WrapInLatexDocument(string bodyContent)
+{
+    return
+@"\documentclass[12pt]{article}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{geometry}
+\usepackage{graphicx}
+\geometry{margin=1in}
+
+\title{Equation Solution}
+\author{MathVR + NavAR w/ Gemini}
+
+\begin{document}
+
+\maketitle
+
+" + bodyContent + @"
+
+\end{document}";
+}
+

@@ -311,7 +311,7 @@ private IEnumerator SendLatexToGemini(string latex)
         }
 
         string rawContent = gemini.candidates[0].content.parts[0].text;
-        rawContent = Regex.Replace(rawContent, @"\\end\{document\}", "");
+        rawContent = Regex.Replace(rawContent, @"\\(documentclass|begin|end)\{document\}", "", RegexOptions.IgnoreCase);
         lastLatexTex = WrapInLatexDocument(rawContent);
 
         Debug.Log("Extracted LaTeX .tex content:\n" + lastLatexTex);

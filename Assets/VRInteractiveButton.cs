@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
 using System.IO;
+using System.IO.Compression;
 using System.Text;
 
 
@@ -48,6 +49,9 @@ public class VRInteractiveButton : MonoBehaviour
     [Header("Gemini API Settings")]
     [SerializeField] private string geminiApiKey = "AIzaSyDeYukkUW8P1HvUxy4M1pQ3toV2l5NxPlU";
 
+    [SerializeField] private string CovertApiSecretKey = "secret_key_157438fb48fedadaa5cb37ebbde714d5";
+    [SerializeField] private string CovertApiPublicKey = "public_key_53161b4d6d374ee353aeca553ec4a566";
+
     private bool isPressed = false;
     private bool   requestInFlight = false;
     private float  lastPressTime   = 0f;
@@ -79,39 +83,6 @@ public class VRInteractiveButton : MonoBehaviour
     {
         OnButtonPressed();
     }
-
-    // void OnButtonPressed()
-    // {
-    //     if (isPressed) return;
-    //     isPressed = true;
-
-    //     Debug.Log("Solve Button Pressed!");
-    //     buttonRenderer.material.color = Color.red;
-
-    //     if (whiteboardCapture == null) return;
-
-    //     byte[] boardImage = whiteboardCapture.CaptureBoardToByteArray();
-
-    //     if (boardImage != null)
-    //     {
-    //         Debug.Log("Chalkboard captured. Byte array length: " + boardImage.Length);
-    //         whiteboardCapture.SaveBoardToFile("WhiteboardCapture.png");
-
-    //         StartCoroutine(SendImageToMathpix(boardImage));
-    //     }
-    //     else
-    //     {
-    //         Debug.LogError("Board image capture failed. Bytes are null.");
-    //     }
-
-    //     Invoke(nameof(ResetColor), 2f);
-    // }
-
-    // void ResetColor()
-    // {
-    //     buttonRenderer.material.color = defaultColor;
-    //     isPressed = false;
-    // }
 
     void OnButtonPressed()
 {
@@ -319,8 +290,6 @@ private IEnumerator SendLatexToGemini(string latex)
         StartCoroutine(SendLatexToLatexOnHTTP(lastLatexTex));
     }
 }
-
-
 private IEnumerator SendLatexToLatexOnHTTP(string texContent)
 {
     // Send to LaTeX-on-HTTP
@@ -352,19 +321,156 @@ private IEnumerator SendLatexToLatexOnHTTP(string texContent)
         string path = Path.Combine(Application.temporaryCachePath, "GeneratedFromGemini.pdf");
         System.IO.File.WriteAllBytes(path, pdfBytes);
         Debug.Log($"PDF saved to: {path}");
+        StartCoroutine(ConvertPdfToPng(path));
     }
     else
     {
         Debug.LogError("LaTeX-on-HTTP Error: " + request.error);
         Debug.LogError(request.downloadHandler.text);
-    }
-    ResetButtonState(); //Move to ending function, but here for now.
+        ResetButtonState();
+        yield break;
+    } 
 }
 
-    private string EscapeJson(string input)
+
+private IEnumerator ConvertPdfToPng(string pdfFilePath)
+{
+    // Authenticate
+    var tokenPayload = new { publicKey = CovertApiPublicKey, secretKey = CovertApiSecretKey };
+    UnityWebRequest tokenRequest = new UnityWebRequest("https://api-server.compdf.com/server/v1/oauth/token", "POST");
+    byte[] bodyRaw = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(tokenPayload));
+    tokenRequest.uploadHandler = new UploadHandlerRaw(bodyRaw);
+    tokenRequest.downloadHandler = new DownloadHandlerBuffer();
+    tokenRequest.SetRequestHeader("Content-Type", "application/json");
+    yield return tokenRequest.SendWebRequest();
+
+    if (tokenRequest.result != UnityWebRequest.Result.Success)
     {
-        return input.Replace("\\", "\\\\").Replace("\"", "\\\"");
+        Debug.LogError("Token error: " + tokenRequest.error);
+        ResetButtonState();
+        yield break;
     }
+
+    string accessToken = JsonConvert.DeserializeObject<Dictionary<string, string>>(tokenRequest.downloadHandler.text)["access_token"];
+
+    // Create task
+    UnityWebRequest taskRequest = UnityWebRequest.Get("https://api-server.compdf.com/server/v1/task/pdf/png");
+    taskRequest.SetRequestHeader("Authorization", "Bearer " + accessToken);
+    yield return taskRequest.SendWebRequest();
+
+    if (taskRequest.result != UnityWebRequest.Result.Success)
+    {
+        Debug.LogError("Task creation error: " + taskRequest.error);
+        ResetButtonState();
+        yield break;
+    }
+
+    string taskId = JsonConvert.DeserializeObject<Dictionary<string, object>>(taskRequest.downloadHandler.text)["taskId"].ToString();
+
+    // Upload PDF
+    List<IMultipartFormSection> form = new List<IMultipartFormSection>
+    {
+        new MultipartFormFileSection("file", File.ReadAllBytes(pdfFilePath), "input.pdf", "application/pdf"),
+        new MultipartFormDataSection("taskId", taskId),
+        new MultipartFormDataSection("password", ""),
+        new MultipartFormDataSection("parameter", "{\"imgDpi\":\"300\"}"),
+        new MultipartFormDataSection("language", "")
+    };
+
+    UnityWebRequest uploadRequest = UnityWebRequest.Post("https://api-server.compdf.com/server/v1/file/upload", form);
+    uploadRequest.SetRequestHeader("Authorization", "Bearer " + accessToken);
+    yield return uploadRequest.SendWebRequest();
+
+    if (uploadRequest.result != UnityWebRequest.Result.Success)
+    {
+        Debug.LogError("Upload error: " + uploadRequest.error);
+        ResetButtonState();
+        yield break;
+    }
+
+    // Execute
+    UnityWebRequest execRequest = UnityWebRequest.Get($"https://api-server.compdf.com/server/v1/execute/start?taskId={taskId}");
+    execRequest.SetRequestHeader("Authorization", "Bearer " + accessToken);
+    yield return execRequest.SendWebRequest();
+
+    if (execRequest.result != UnityWebRequest.Result.Success)
+    {
+        Debug.LogError("Execution error: " + execRequest.error);
+        ResetButtonState();
+        yield break;
+    }
+
+    // Get result info
+    UnityWebRequest resultRequest = UnityWebRequest.Get($"https://api-server.compdf.com/server/v1/task/taskInfo?taskId={taskId}");
+    resultRequest.SetRequestHeader("Authorization", "Bearer " + accessToken);
+    yield return resultRequest.SendWebRequest();
+
+    if (resultRequest.result != UnityWebRequest.Result.Success)
+    {
+        Debug.LogError("Result fetch error: " + resultRequest.error);
+        ResetButtonState();
+        yield break;
+    }
+
+    // Download ZIP
+    string resultJson = resultRequest.downloadHandler.text;
+    var resultData = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultJson);
+    var files = (Newtonsoft.Json.Linq.JArray)resultData["files"];
+
+    string zipUrl = files[0]?["url"]?.ToString();
+
+    if (!string.IsNullOrEmpty(zipUrl))
+    {
+        UnityWebRequest zipRequest = UnityWebRequest.Get(zipUrl);
+        string localZipPath = Path.Combine(Application.temporaryCachePath, "converted_images.zip");
+        zipRequest.downloadHandler = new DownloadHandlerFile(localZipPath);
+        yield return zipRequest.SendWebRequest();
+
+        if (zipRequest.result == UnityWebRequest.Result.Success)
+        {
+            Debug.Log("ZIP downloaded: " + localZipPath);
+            string extractedFolder = Path.Combine(Application.temporaryCachePath, "unzipped_images");
+            //Uncomment to test the extraction
+            ExtractZipFile(localZipPath, extractedFolder);
+        }
+        else
+        {
+            Debug.LogError("ZIP download failed: " + zipRequest.error);
+        }
+    }
+
+    ResetButtonState();
+}
+private void ExtractZipFile(string zipFilePath, string outputFolder)
+{
+    try
+    {
+        if (Directory.Exists(outputFolder))
+            Directory.Delete(outputFolder, true);
+
+        ZipFile.ExtractToDirectory(zipFilePath, outputFolder);
+        Debug.Log($"ZIP extracted to: {outputFolder}");
+        
+        string[] files = Directory.GetFiles(outputFolder);
+        foreach (var file in files)
+        {
+            Debug.Log("Extracted file: " + file);
+            // TODO: Display first PNG on Mesh
+        }
+
+
+    }
+    catch (System.Exception ex)
+    {
+        Debug.LogError("Error extracting ZIP: " + ex.Message);
+    }
+}
+
+
+private string EscapeJson(string input)
+{
+    return input.Replace("\\", "\\\\").Replace("\"", "\\\"");
+}
  private string WrapInLatexDocument(string bodyContent)
 {
     return

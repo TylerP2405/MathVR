@@ -4,6 +4,9 @@ using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
+using System.IO;
+using System.Text;
+
 
 
 [System.Serializable]
@@ -22,6 +25,11 @@ public class MathpixResponse
     public float confidence;
     public List<MathpixWord> word_data;
 }
+[System.Serializable] public class GeminiPart { public string text; }
+[System.Serializable] public class GeminiContent { public List<GeminiPart> parts; }
+[System.Serializable] public class GeminiCandidate { public GeminiContent content; }
+[System.Serializable] public class GeminiResponse { public List<GeminiCandidate> candidates; }
+
 
 public class VRInteractiveButton : MonoBehaviour
 {
@@ -41,6 +49,9 @@ public class VRInteractiveButton : MonoBehaviour
     [SerializeField] private string geminiApiKey = "AIzaSyDeYukkUW8P1HvUxy4M1pQ3toV2l5NxPlU";
 
     private bool isPressed = false;
+    private bool   requestInFlight = false;
+    private float  lastPressTime   = 0f;
+    private const  float debounceSeconds = 2f;
 
     void Start()
     {
@@ -69,38 +80,79 @@ public class VRInteractiveButton : MonoBehaviour
         OnButtonPressed();
     }
 
+    // void OnButtonPressed()
+    // {
+    //     if (isPressed) return;
+    //     isPressed = true;
+
+    //     Debug.Log("Solve Button Pressed!");
+    //     buttonRenderer.material.color = Color.red;
+
+    //     if (whiteboardCapture == null) return;
+
+    //     byte[] boardImage = whiteboardCapture.CaptureBoardToByteArray();
+
+    //     if (boardImage != null)
+    //     {
+    //         Debug.Log("Chalkboard captured. Byte array length: " + boardImage.Length);
+    //         whiteboardCapture.SaveBoardToFile("WhiteboardCapture.png");
+
+    //         StartCoroutine(SendImageToMathpix(boardImage));
+    //     }
+    //     else
+    //     {
+    //         Debug.LogError("Board image capture failed. Bytes are null.");
+    //     }
+
+    //     Invoke(nameof(ResetColor), 2f);
+    // }
+
+    // void ResetColor()
+    // {
+    //     buttonRenderer.material.color = defaultColor;
+    //     isPressed = false;
+    // }
+
     void OnButtonPressed()
+{
+    // Debounce rapid taps 
+    if (Time.time - lastPressTime < debounceSeconds) return;
+    lastPressTime = Time.time;
+
+    // One active request at a time 
+    if (requestInFlight) return;
+    requestInFlight = true;
+
+    Debug.Log("Solve Button Pressed!");
+    buttonRenderer.material.color = Color.red;
+
+    if (whiteboardCapture == null)
     {
-        if (isPressed) return;
-        isPressed = true;
-
-        Debug.Log("Solve Button Pressed!");
-        buttonRenderer.material.color = Color.red;
-
-        if (whiteboardCapture == null) return;
-
-        byte[] boardImage = whiteboardCapture.CaptureBoardToByteArray();
-
-        if (boardImage != null)
-        {
-            Debug.Log("Chalkboard captured. Byte array length: " + boardImage.Length);
-            whiteboardCapture.SaveBoardToFile("WhiteboardCapture.png");
-
-            StartCoroutine(SendImageToMathpix(boardImage));
-        }
-        else
-        {
-            Debug.LogError("Board image capture failed. Bytes are null.");
-        }
-
-        Invoke(nameof(ResetColor), 2f);
+        ResetButtonState();
+        Debug.LogError("WhiteboardCapture not found.");
+        return;
     }
 
-    void ResetColor()
+    byte[] boardImage = whiteboardCapture.CaptureBoardToByteArray();
+    if (boardImage == null)
     {
-        buttonRenderer.material.color = defaultColor;
-        isPressed = false;
+        ResetButtonState();
+        Debug.LogError("Board image capture failed (bytes null).");
+        return;
     }
+
+    Debug.Log($"Chalkboard captured. Bytes: {boardImage.Length}");
+    whiteboardCapture.SaveBoardToFile("WhiteboardCapture.png");
+    StartCoroutine(SendImageToMathpix(boardImage));
+}
+
+// helper
+private void ResetButtonState()
+{
+    requestInFlight = false;
+    buttonRenderer.material.color = defaultColor;
+}
+
 
     private bool GetControllerRaycast(OVRInput.Controller controller, out RaycastHit hit)
     {
@@ -118,7 +170,13 @@ public class VRInteractiveButton : MonoBehaviour
         WWWForm form = new WWWForm();
         form.AddBinaryData("file", imageBytes, "whiteboard.png", "image/png");
 
-        string optionsJson = "{\"math_inline_delimiters\": [\"$\", \"$\"], \"rm_spaces\": true, \"formats\": [\"latex_styled\", \"text\"], \"word_data\": true}";
+        string optionsJson = JsonConvert.SerializeObject(new
+            {
+                formats      = new[] { "latex_styled" },
+                rm_spaces    = true,
+                math_inline_delimiters = new[] { "$", "$" },
+                word_data    = true
+            });
         form.AddField("options_json", optionsJson);
 
         UnityWebRequest request = UnityWebRequest.Post(mathpixUrl, form);
@@ -131,6 +189,9 @@ public class VRInteractiveButton : MonoBehaviour
         if (request.result != UnityWebRequest.Result.Success)
         {
             Debug.LogError("Mathpix API Error: " + request.error);
+            ResetButtonState(); 
+            yield break;
+
         }
         else
         {
@@ -164,7 +225,7 @@ public class VRInteractiveButton : MonoBehaviour
             Debug.Log("Valid math equation found: " + latex);
 
             // Uncommnet when Mathpix is good.
-            //StartCoroutine(SendLatexToGemini(latex));
+            StartCoroutine(SendLatexToGemini(latex));
         }
         else
         {
@@ -174,58 +235,149 @@ public class VRInteractiveButton : MonoBehaviour
                 }
     }
 
-    private string BuildFullPromptFromWordData(List<MathpixWord> words)
+    private static string BuildFullPromptFromWordData(IEnumerable<MathpixWord> words)
 {
-    var parts = new List<string>();
+    var sb = new System.Text.StringBuilder();
 
-    foreach (var word in words)
+    foreach (var w in words)
     {
-        if (!string.IsNullOrEmpty(word.latex))
-        {
-            if (word.type == "math")
-            {
-                parts.Add($"\\[{word.latex}\\]");
-            }
-            else // type == "text"
-            {
-                parts.Add(word.latex); // Keep as LaTeX \text{...}
-            }
-        }
+        if (string.IsNullOrWhiteSpace(w?.latex)) continue;
+
+        if (w.type == "math")
+            sb.Append("\\[").Append(w.latex).Append("\\] ");
+        else // "text" or anything else
+            sb.Append(w.latex).Append(' ');
     }
 
-    return string.Join(" ", parts);
+    return sb.ToString().TrimEnd();   // remove last space
 }
 
 
-    private IEnumerator SendLatexToGemini(string latex)
+private string lastLatexTex; 
+
+private IEnumerator SendLatexToGemini(string latex)
+{
+    string geminiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={geminiApiKey}";
+    
+    latex = Regex.Replace(latex, @"\r?\n", "\n"); 
+
+    string prompt =
+    "You are a LaTeX math tutor.\n\n" +
+
+    "TASK:\n" +
+    "Solve the problem below and return **only** the explanation body—" +
+    "no \\documentclass, no \\begin{document}, no metadata.\n\n" +
+
+    "FORMAT RULES\n" +
+    "• Restate the problem in one sentence that begins with: "
+        + "\"The question asks to compute/solve:\"\n" +
+    "• Put every derivation line in display math mode (\\[ ... \\]).\n" +
+    "• End with the final answer boxed: \\boxed{...}\n" +
+    "• Do not add any text outside the LaTeX body.\n\n" +
+
+    "PROBLEM (LaTeX):\n" +
+    latex;   
+
+
+    string jsonBody = "{\"contents\": [{\"parts\": [{\"text\": \"" + EscapeJson(prompt) + "\"}]}]}";
+
+
+    UnityWebRequest request = new UnityWebRequest(geminiUrl, "POST");
+    byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
+    request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+    request.downloadHandler = new DownloadHandlerBuffer();
+    request.SetRequestHeader("Content-Type", "application/json");
+
+    Debug.Log("Sending LaTeX to Gemini...");
+    yield return request.SendWebRequest();
+
+    if (request.result != UnityWebRequest.Result.Success)
     {
-        string geminiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={geminiApiKey}";
-
-        string prompt = $"Solve this math problem with short step-by-step explanation using LaTeX formatting:\n\n{latex}";
-        string jsonBody = "{\"contents\": [{\"parts\": [{\"text\": \"" + EscapeJson(prompt) + "\"}]}]}";
-
-        UnityWebRequest request = new UnityWebRequest(geminiUrl, "POST");
-        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
-        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-        request.downloadHandler = new DownloadHandlerBuffer();
-        request.SetRequestHeader("Content-Type", "application/json");
-
-        Debug.Log("Sending LaTeX to Gemini...");
-        yield return request.SendWebRequest();
-
-        if (request.result != UnityWebRequest.Result.Success)
-        {
-            Debug.LogError("Gemini API Error: " + request.error);
-        }
-        else
-        {
-            string result = request.downloadHandler.text;
-            Debug.Log("Gemini Response:\n" + result);
-        }
+        Debug.LogError("Gemini API Error: " + request.error);
+        ResetButtonState(); 
+        yield break;
     }
+    else
+    {
+        string result = request.downloadHandler.text;
+        Debug.Log("Gemini Response JSON:\n" + result);
+
+        // Deserialize Gemini response and extract the LaTeX .tex file text
+        GeminiResponse gemini = JsonConvert.DeserializeObject<GeminiResponse>(result);
+        if (gemini?.candidates?.Count == 0 || gemini.candidates[0].content?.parts?.Count == 0){
+            Debug.LogError("Gemini returned no usable content.");
+            ResetButtonState();          
+            yield break;                 
+        }
+
+        string rawContent = gemini.candidates[0].content.parts[0].text;
+        rawContent = Regex.Replace(rawContent, @"\\(documentclass|begin|end)\{document\}", "", RegexOptions.IgnoreCase);
+        lastLatexTex = WrapInLatexDocument(rawContent);
+
+        Debug.Log("Extracted LaTeX .tex content:\n" + lastLatexTex);
+
+        StartCoroutine(SendLatexToLatexOnHTTP(lastLatexTex));
+    }
+}
+
+
+private IEnumerator SendLatexToLatexOnHTTP(string texContent)
+{
+    // Send to LaTeX-on-HTTP
+    var requestData = new
+    {
+        compiler = "pdflatex",
+        resources = new[] {
+            new {
+                main = true,
+                content = texContent
+            }
+        },
+        output_format = "pdf"
+    };
+
+    string json = JsonConvert.SerializeObject(requestData);
+    UnityWebRequest request = new UnityWebRequest("https://latex.ytotech.com/builds/sync", "POST");
+    byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
+    request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+    request.downloadHandler = new DownloadHandlerBuffer();
+    request.SetRequestHeader("Content-Type", "application/json");
+
+    Debug.Log("Sending full LaTeX document to LaTeX-on-HTTP...");
+    yield return request.SendWebRequest();
+
+    if (request.result == UnityWebRequest.Result.Success)
+    {
+        byte[] pdfBytes = request.downloadHandler.data;
+        string path = Path.Combine(Application.temporaryCachePath, "GeneratedFromGemini.pdf");
+        System.IO.File.WriteAllBytes(path, pdfBytes);
+        Debug.Log($"PDF saved to: {path}");
+    }
+    else
+    {
+        Debug.LogError("LaTeX-on-HTTP Error: " + request.error);
+        Debug.LogError(request.downloadHandler.text);
+    }
+    ResetButtonState(); //Move to ending function, but here for now.
+}
 
     private string EscapeJson(string input)
     {
         return input.Replace("\\", "\\\\").Replace("\"", "\\\"");
     }
+ private string WrapInLatexDocument(string bodyContent)
+{
+    return
+@"\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\title{Solution}
+\author{MathVR + Gemini}
+
+\begin{document}
+\maketitle
+" + bodyContent + @"
+\end{document}";
+}
 }

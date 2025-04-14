@@ -456,6 +456,11 @@ private void ExtractZipFile(string zipFilePath, string outputFolder)
         {
             Debug.Log("Extracted file: " + file);
             // TODO: Display first PNG on Mesh
+            if (file.EndsWith(".png"))
+                {
+                    DisplayImageOnUI(file);
+                    break;
+                }
         }
 
 
@@ -486,4 +491,31 @@ private string EscapeJson(string input)
 " + bodyContent + @"
 \end{document}";
 }
+
+private void DisplayImageOnUI(string imagePath)
+{
+    if (!File.Exists(imagePath))
+    {
+        Debug.LogError("Image file not found: " + imagePath);
+        return;
+    }
+
+    byte[] imageData = File.ReadAllBytes(imagePath);
+    Texture2D tex = new Texture2D(2, 2);
+    tex.LoadImage(imageData);
+
+    GameObject uiImage = GameObject.Find("SolutionImage");
+
+    if (uiImage == null)
+    {
+        Debug.LogError("SolutionImage UI object not found.");
+        return;
+    }
+
+    UnityEngine.UI.RawImage rawImage = uiImage.GetComponent<UnityEngine.UI.RawImage>();
+    rawImage.texture = tex;
+
+    Debug.Log("Image displayed on UI.");
+}
+
 }

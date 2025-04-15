@@ -322,7 +322,8 @@ private IEnumerator SendLatexToLatexOnHTTP(string texContent)
         string path = Path.Combine(Application.temporaryCachePath, "GeneratedFromGemini.pdf");
         System.IO.File.WriteAllBytes(path, pdfBytes);
         Debug.Log($"PDF saved to: {path}");
-        StartCoroutine(ConvertToPng(path));
+
+        StartCoroutine(LocalConvertPDF(path));     // Changed to local ConvertPDF
     }
     else
     {
@@ -503,13 +504,28 @@ private string EscapeJson(string input)
 }
 
 
-private IEnumerator ConvertToPng(string pdfFilePath)
+private IEnumerator LocalConvertPDF(string pdfFilePath)
     {
-        ConvertPDF converter = new ConvertPDF();
+    ConvertPDF converter = new ConvertPDF();
     string jpegOutput = Path.Combine(Application.temporaryCachePath, "converted-pdf.jpg");
 
-    converter.Convert(pdfFilePath, jpegOutput, 1, 2, "jpeg", 500, 600);
-        Debug.Log("Converted Images from " + pdfFilePath + " in" + jpegOutput);
+    converter.Convert(pdfFilePath, jpegOutput, 1, 2, "jpeg", 400, 400);
+    Debug.Log("Converted Images from " + pdfFilePath + " in" + jpegOutput);
+
+    string[] files = Directory.GetFiles(Application.temporaryCachePath);
+    foreach (var file in files)
+    {
+        Debug.Log("Extracted file: " + file);
+        // TODO: Display first PNG on Mesh
+        if (file.EndsWith(".jpg"))
+        {
+            DisplayImageOnUI(file);
+            break;
+        }
+
+    }
+        yield return converter;
+    ResetButtonState();
     }
 
 private void DisplayImageOnUI(string imagePath)

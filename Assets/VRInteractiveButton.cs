@@ -3,6 +3,7 @@ using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.IO.Compression;
@@ -331,11 +332,9 @@ private IEnumerator SendLatexToLatexOnHTTP(string texContent)
         yield break;
     } 
 }
-
-
 private IEnumerator ConvertPdfToPng(string pdfFilePath)
 {
-    // Authenticate
+    // 1. Get access token
     var tokenPayload = new { publicKey = CovertApiPublicKey, secretKey = CovertApiSecretKey };
     UnityWebRequest tokenRequest = new UnityWebRequest("https://api-server.compdf.com/server/v1/oauth/token", "POST");
     byte[] bodyRaw = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(tokenPayload));
@@ -350,10 +349,12 @@ private IEnumerator ConvertPdfToPng(string pdfFilePath)
         ResetButtonState();
         yield break;
     }
+    Debug.Log($"OAuth raw JSON: {tokenRequest.downloadHandler.text}");
 
-    string accessToken = JsonConvert.DeserializeObject<Dictionary<string, string>>(tokenRequest.downloadHandler.text)["access_token"];
+    var tokenJson = JObject.Parse(tokenRequest.downloadHandler.text);
+    string accessToken = tokenJson["data"]?["access_token"]?.ToString();
 
-    // Create task
+    // 2. Create PDF-to-PNG task
     UnityWebRequest taskRequest = UnityWebRequest.Get("https://api-server.compdf.com/server/v1/task/pdf/png");
     taskRequest.SetRequestHeader("Authorization", "Bearer " + accessToken);
     yield return taskRequest.SendWebRequest();
@@ -365,9 +366,10 @@ private IEnumerator ConvertPdfToPng(string pdfFilePath)
         yield break;
     }
 
-    string taskId = JsonConvert.DeserializeObject<Dictionary<string, object>>(taskRequest.downloadHandler.text)["taskId"].ToString();
+    var taskJson = JObject.Parse(taskRequest.downloadHandler.text);
+    string taskId = taskJson["data"]?["taskId"]?.ToString();
 
-    // Upload PDF
+    // 3. Upload the PDF file
     List<IMultipartFormSection> form = new List<IMultipartFormSection>
     {
         new MultipartFormFileSection("file", File.ReadAllBytes(pdfFilePath), "input.pdf", "application/pdf"),
@@ -388,7 +390,7 @@ private IEnumerator ConvertPdfToPng(string pdfFilePath)
         yield break;
     }
 
-    // Execute
+    // 4. Execute conversion
     UnityWebRequest execRequest = UnityWebRequest.Get($"https://api-server.compdf.com/server/v1/execute/start?taskId={taskId}");
     execRequest.SetRequestHeader("Authorization", "Bearer " + accessToken);
     yield return execRequest.SendWebRequest();
@@ -400,7 +402,7 @@ private IEnumerator ConvertPdfToPng(string pdfFilePath)
         yield break;
     }
 
-    // Get result info
+    // 5. Fetch result info
     UnityWebRequest resultRequest = UnityWebRequest.Get($"https://api-server.compdf.com/server/v1/task/taskInfo?taskId={taskId}");
     resultRequest.SetRequestHeader("Authorization", "Bearer " + accessToken);
     yield return resultRequest.SendWebRequest();
@@ -412,13 +414,19 @@ private IEnumerator ConvertPdfToPng(string pdfFilePath)
         yield break;
     }
 
-    // Download ZIP
-    string resultJson = resultRequest.downloadHandler.text;
-    var resultData = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultJson);
-    var files = (Newtonsoft.Json.Linq.JArray)resultData["files"];
+    var resultJson = JObject.Parse(resultRequest.downloadHandler.text);
+    JArray files = resultJson["data"]?["files"] as JArray;
+
+    if (files == null || files.Count == 0)
+    {
+        Debug.LogError("No files returned in result.");
+        ResetButtonState();
+        yield break;
+    }
 
     string zipUrl = files[0]?["url"]?.ToString();
 
+    // 6. Download the ZIP
     if (!string.IsNullOrEmpty(zipUrl))
     {
         UnityWebRequest zipRequest = UnityWebRequest.Get(zipUrl);
@@ -430,7 +438,6 @@ private IEnumerator ConvertPdfToPng(string pdfFilePath)
         {
             Debug.Log("ZIP downloaded: " + localZipPath);
             string extractedFolder = Path.Combine(Application.temporaryCachePath, "unzipped_images");
-            //Uncomment to test the extraction
             ExtractZipFile(localZipPath, extractedFolder);
         }
         else
@@ -441,6 +448,10 @@ private IEnumerator ConvertPdfToPng(string pdfFilePath)
 
     ResetButtonState();
 }
+
+
+
+
 private void ExtractZipFile(string zipFilePath, string outputFolder)
 {
     try
@@ -465,7 +476,6 @@ private void ExtractZipFile(string zipFilePath, string outputFolder)
         Debug.LogError("Error extracting ZIP: " + ex.Message);
     }
 }
-
 
 private string EscapeJson(string input)
 {

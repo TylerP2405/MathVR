@@ -322,7 +322,7 @@ private IEnumerator SendLatexToLatexOnHTTP(string texContent)
         string path = Path.Combine(Application.temporaryCachePath, "GeneratedFromGemini.pdf");
         System.IO.File.WriteAllBytes(path, pdfBytes);
         Debug.Log($"PDF saved to: {path}");
-        StartCoroutine(ConvertPdfToPng(path));
+        StartCoroutine(ConvertToPng(path));
     }
     else
     {
@@ -501,6 +501,16 @@ private string EscapeJson(string input)
 " + bodyContent + @"
 \end{document}";
 }
+
+
+private IEnumerator ConvertToPng(string pdfFilePath)
+    {
+        ConvertPDF converter = new ConvertPDF();
+    string jpegOutput = Path.Combine(Application.temporaryCachePath, "converted-pdf.jpg");
+
+    converter.Convert(pdfFilePath, jpegOutput, 1, 2, "jpeg", 500, 600);
+        Debug.Log("Converted Images from " + pdfFilePath + " in" + jpegOutput);
+    }
 
 private void DisplayImageOnUI(string imagePath)
 {

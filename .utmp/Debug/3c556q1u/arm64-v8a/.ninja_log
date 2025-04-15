@@ -1,10 +1,19 @@
 # ninja log v5
+21	1098	7645760284596156	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	bf72d20bf33b7c6c
 1	1076	7645760284320450	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	aa40dac36a6f4853
 14	1079	7645760284345511	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	c5bd86dc969ddce6
+1241	1318	7645760286809184	E:/Unity VR Projects/MathVR/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/Debug/3c556q1u/obj/arm64-v8a/libgame.so	666ffc6ac952dbf7
 10	1087	7645760284450934	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	bb95162920d6495f
-25	1089	7645760284501116	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	333604fa05455bbf
-21	1098	7645760284596156	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	bf72d20bf33b7c6c
 4	1132	7645760284947042	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	7c67df4a17219710
+25	1089	7645760284501116	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	333604fa05455bbf
 17	1198	7645760285618032	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	43f996f5698bc470
 7	1241	7645760286041062	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	a057fae9c088484f
-1241	1318	7645760286809184	E:/Unity VR Projects/MathVR/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/Debug/3c556q1u/obj/arm64-v8a/libgame.so	666ffc6ac952dbf7
+18	1090	7664627734414918	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	c5bd86dc969ddce6
+4	1093	7664627734510239	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	aa40dac36a6f4853
+22	1096	7664627734540367	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	333604fa05455bbf
+26	1114	7664627734721755	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	bf72d20bf33b7c6c
+7	1154	7664627735075139	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	bb95162920d6495f
+0	1161	7664627735201208	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	7c67df4a17219710
+14	1222	7664627735793759	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	43f996f5698bc470
+11	1263	7664627736201633	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	a057fae9c088484f
+1263	1415	7664627737745898	E:/Unity VR Projects/MathVR/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/Debug/3c556q1u/obj/arm64-v8a/libgame.so	666ffc6ac952dbf7

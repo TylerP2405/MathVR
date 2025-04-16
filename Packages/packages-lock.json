@@ -376,6 +376,13 @@
       },
       "url": "https://packages.unity.com"
     },
+    "de.sungaila.pdftoimage": {
+      "version": "https://github.com/sungaila/PDFtoImage.git?path=etc/UnityPackage",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "720a220d64c95813126d9527b056a0da245c15f4"
+    },
     "com.unity.modules.accessibility": {
       "version": "1.0.0",
       "depth": 0,

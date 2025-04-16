@@ -363,12 +363,18 @@ public class VRInteractiveButton : MonoBehaviour
 
     private void DisplayImageOnUI(SKBitmap bitmap)
     {
+        //var tex = new Texture2D(bitmap.Width, bitmap.Height, TextureFormat.RGBA32, mipCount: 3, linear: true);
         var tex = new Texture2D(bitmap.Width, bitmap.Height);
         using var ms = new MemoryStream();
         bitmap.Encode(ms, SKEncodedImageFormat.Png, 100);
         ms.Position = 0;
         tex.LoadImage(ms.ToArray());
-        tex.anisoLevel = 0;        // Change to increase clarity at distance
+
+        // Change to increase quality / clarity at distance
+        tex.filterMode = FilterMode.Trilinear;
+        tex.mipMapBias = -0.7f;
+        tex.anisoLevel = 9;        
+
         GameObject uiImage = GameObject.Find("SolutionImage");
 
         if (uiImage == null)
@@ -381,7 +387,6 @@ public class VRInteractiveButton : MonoBehaviour
         Debug.Log(rawImage.rectTransform.localScale);
         rawImage.rectTransform.sizeDelta = new Vector2(bitmap.Width / 5, bitmap.Height / 5);
         rawImage.texture = tex;
-
         Debug.Log("Image displayed on UI.");
     }
 

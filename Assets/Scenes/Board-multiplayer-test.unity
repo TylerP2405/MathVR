@@ -15180,7 +15180,7 @@ MonoBehaviour:
   _underlyingTransformer: {fileID: 495550186}
   _targetTransform: {fileID: 993855066}
   _underlyingTargetTransform: {fileID: 1970245569}
-  _filterStrength: 0.4
+  _filterStrength: 0.8
 --- !u!114 &495550186
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -62047,7 +62047,7 @@ AudioSource:
   m_audioClip: {fileID: 8300000, guid: 11ecfcd79bd104e4cb86c5b310ef5234, type: 3}
   m_Resource: {fileID: 8300000, guid: 11ecfcd79bd104e4cb86c5b310ef5234, type: 3}
   m_PlayOnAwake: 1
-  m_Volume: 0.4
+  m_Volume: 0.5
   m_Pitch: 1
   Loop: 1
   Mute: 0

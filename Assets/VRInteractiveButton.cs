@@ -41,6 +41,9 @@ public class VRInteractiveButton : MonoBehaviour
     [SerializeField] private OVRInput.Controller rightHand = OVRInput.Controller.RTouch;
     [SerializeField] private OVRInput.Controller leftHand = OVRInput.Controller.LTouch;
 
+    [Header("Loading Image")]
+    [SerializeField] public GameObject loadingSpinner;
+
     private Renderer buttonRenderer;
     private Color defaultColor;
     private WhiteboardCapture whiteboardCapture;
@@ -60,28 +63,21 @@ public class VRInteractiveButton : MonoBehaviour
     private float  lastPressTime   = 0f;
     private const  float debounceSeconds = 2f;
 
+
+
     void Start()
     {
         buttonRenderer = GetComponent<Renderer>();
         defaultColor = buttonRenderer.material.color;
 
         whiteboardCapture = FindObjectOfType<WhiteboardCapture>();
+
         if (whiteboardCapture == null)
         {
             Debug.LogError("Could not find a WhiteboardCapture component in the scene!");
         }
     }
 
-    /*void Update()
-    {
-        if (GetControllerRaycast(rightHand, out RaycastHit hit))
-        {
-            if (hit.collider.gameObject == gameObject && OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, rightHand))
-            {
-                OnButtonPressed();
-            }
-        }
-    }*/
     public void TriggerButtonFromTouch()
     {
         OnButtonPressed();
@@ -89,8 +85,11 @@ public class VRInteractiveButton : MonoBehaviour
 
     void OnButtonPressed()
 {
-    // Debounce rapid taps 
-    if (Time.time - lastPressTime < debounceSeconds) return;
+        //Show loading spinner
+        loadingSpinner.SetActive(true);
+
+        // Debounce rapid taps 
+        if (Time.time - lastPressTime < debounceSeconds) return;
     lastPressTime = Time.time;
 
     // One active request at a time 
@@ -123,6 +122,8 @@ public class VRInteractiveButton : MonoBehaviour
 // helper
 private void ResetButtonState()
 {
+    //Hide loading spinner after finished
+    loadingSpinner.SetActive(false);
     requestInFlight = false;
     buttonRenderer.material.color = defaultColor;
 }
@@ -326,121 +327,6 @@ private IEnumerator SendLatexToLatexOnHTTP(string texContent)
         yield break;
     } 
 }
-private IEnumerator ConvertPdfToPng(string pdfFilePath)
-{
-    // 1. Get access token
-    var tokenPayload = new { publicKey = CovertApiPublicKey, secretKey = CovertApiSecretKey };
-    UnityWebRequest tokenRequest = new UnityWebRequest("https://api-server.compdf.com/server/v1/oauth/token", "POST");
-    byte[] bodyRaw = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(tokenPayload));
-    tokenRequest.uploadHandler = new UploadHandlerRaw(bodyRaw);
-    tokenRequest.downloadHandler = new DownloadHandlerBuffer();
-    tokenRequest.SetRequestHeader("Content-Type", "application/json");
-    yield return tokenRequest.SendWebRequest();
-
-    if (tokenRequest.result != UnityWebRequest.Result.Success)
-    {
-        Debug.LogError("Token error: " + tokenRequest.error);
-        ResetButtonState();
-        yield break;
-    }
-    Debug.Log($"OAuth raw JSON: {tokenRequest.downloadHandler.text}");
-
-    var tokenJson = JObject.Parse(tokenRequest.downloadHandler.text);
-    string accessToken = tokenJson["data"]?["access_token"]?.ToString();
-
-    // 2. Create PDF-to-PNG task
-    UnityWebRequest taskRequest = UnityWebRequest.Get("https://api-server.compdf.com/server/v1/task/pdf/png");
-    taskRequest.SetRequestHeader("Authorization", "Bearer " + accessToken);
-    yield return taskRequest.SendWebRequest();
-
-    if (taskRequest.result != UnityWebRequest.Result.Success)
-    {
-        Debug.LogError("Task creation error: " + taskRequest.error);
-        ResetButtonState();
-        yield break;
-    }
-
-    var taskJson = JObject.Parse(taskRequest.downloadHandler.text);
-    string taskId = taskJson["data"]?["taskId"]?.ToString();
-
-    // 3. Upload the PDF file
-    List<IMultipartFormSection> form = new List<IMultipartFormSection>
-    {
-        new MultipartFormFileSection("file", File.ReadAllBytes(pdfFilePath), "input.pdf", "application/pdf"),
-        new MultipartFormDataSection("taskId", taskId),
-        new MultipartFormDataSection("password", ""),
-        new MultipartFormDataSection("parameter", "{\"imgDpi\":\"300\"}"),
-        new MultipartFormDataSection("language", "")
-    };
-
-    UnityWebRequest uploadRequest = UnityWebRequest.Post("https://api-server.compdf.com/server/v1/file/upload", form);
-    uploadRequest.SetRequestHeader("Authorization", "Bearer " + accessToken);
-    yield return uploadRequest.SendWebRequest();
-
-    if (uploadRequest.result != UnityWebRequest.Result.Success)
-    {
-        Debug.LogError("Upload error: " + uploadRequest.error);
-        ResetButtonState();
-        yield break;
-    }
-
-    // 4. Execute conversion
-    UnityWebRequest execRequest = UnityWebRequest.Get($"https://api-server.compdf.com/server/v1/execute/start?taskId={taskId}");
-    execRequest.SetRequestHeader("Authorization", "Bearer " + accessToken);
-    yield return execRequest.SendWebRequest();
-
-    if (execRequest.result != UnityWebRequest.Result.Success)
-    {
-        Debug.LogError("Execution error: " + execRequest.error);
-        ResetButtonState();
-        yield break;
-    }
-
-    // 5. Fetch result info
-    UnityWebRequest resultRequest = UnityWebRequest.Get($"https://api-server.compdf.com/server/v1/task/taskInfo?taskId={taskId}");
-    resultRequest.SetRequestHeader("Authorization", "Bearer " + accessToken);
-    yield return resultRequest.SendWebRequest();
-
-    if (resultRequest.result != UnityWebRequest.Result.Success)
-    {
-        Debug.LogError("Result fetch error: " + resultRequest.error);
-        ResetButtonState();
-        yield break;
-    }
-
-    var resultJson = JObject.Parse(resultRequest.downloadHandler.text);
-    JArray files = resultJson["data"]?["files"] as JArray;
-
-    if (files == null || files.Count == 0)
-    {
-        Debug.LogError("No files returned in result.");
-        ResetButtonState();
-        yield break;
-    }
-
-    string zipUrl = files[0]?["url"]?.ToString();
-
-    // 6. Download the ZIP
-    if (!string.IsNullOrEmpty(zipUrl))
-    {
-        UnityWebRequest zipRequest = UnityWebRequest.Get(zipUrl);
-        string localZipPath = Path.Combine(Application.temporaryCachePath, "converted_images.zip");
-        zipRequest.downloadHandler = new DownloadHandlerFile(localZipPath);
-        yield return zipRequest.SendWebRequest();
-
-        if (zipRequest.result == UnityWebRequest.Result.Success)
-        {
-            Debug.Log("ZIP downloaded: " + localZipPath);
-            string extractedFolder = Path.Combine(Application.temporaryCachePath, "unzipped_images");
-        }
-        else
-        {
-            Debug.LogError("ZIP download failed: " + zipRequest.error);
-        }
-    }
-
-    ResetButtonState();
-}
 
 private string EscapeJson(string input)
 {
@@ -478,7 +364,7 @@ private void DisplayImageOnUI(SKBitmap bitmap)
     bitmap.Encode(ms, SKEncodedImageFormat.Png, 100);
     ms.Position = 0;
     tex.LoadImage(ms.ToArray());
-
+    tex.anisoLevel = 9;        // Change to increase clarity at distance
     GameObject uiImage = GameObject.Find("SolutionImage");
 
     if (uiImage == null)

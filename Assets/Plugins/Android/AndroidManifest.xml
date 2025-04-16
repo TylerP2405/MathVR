@@ -15,7 +15,7 @@
     <meta-data android:name="com.oculus.handtracking.version" android:value="V2.0" />
     <meta-data android:name="com.oculus.ossplash.background" android:value="black" />
     <meta-data android:name="com.oculus.telemetry.project_guid" android:value="3b55711e-a583-4c11-9315-784d051b5426" />
-    <meta-data android:name="com.oculus.supportedDevices" android:value="quest|quest2|questpro|quest3|quest3s" />
+    <meta-data android:name="com.oculus.supportedDevices" android:value="quest2|questpro|quest3|quest3s" />
   </application>
   <uses-feature android:name="android.hardware.vr.headtracking" android:version="1" android:required="true" />
   <uses-feature android:name="oculus.software.handtracking" android:required="false" />

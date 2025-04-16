@@ -54,7 +54,7 @@ We welcome contributions! Please fork the repository and submit a pull request f
 
 ## Contributors
 
-- [TylerP2405](https://github.com/TylerP2405)
+- TylerP2405
 - Gordon Nguyen
 - Jake Schwartz
 - Mysha-rah

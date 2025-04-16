@@ -10,6 +10,8 @@ MathVR is a VR productivity app designed to create a convenient and immersive st
 - **Multiplayer Collaboration**  
   Join classmates and instructors in real time within the same virtual space. Collaborate, interact, and solve problems together, fostering teamwork and group learning.
 
+![Alt text](https://github.com/TylerP2405/MathVR/blob/main/math-vr-home-screenshot.png?raw=true)
+
 ## Equation Processing Workflow
 
 MathVR uses an automated pipeline to process and display math solutions:

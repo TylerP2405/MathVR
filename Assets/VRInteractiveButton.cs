@@ -8,6 +8,8 @@ using System.Text.RegularExpressions;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
+using SkiaSharp;
+using UnityEngine.UI;
 
 
 
@@ -114,7 +116,7 @@ public class VRInteractiveButton : MonoBehaviour
     }
 
     Debug.Log($"Chalkboard captured. Bytes: {boardImage.Length}");
-    whiteboardCapture.SaveBoardToFile("WhiteboardCapture.png");
+    //whiteboardCapture.SaveBoardToFile("WhiteboardCapture.png");
     StartCoroutine(SendImageToMathpix(boardImage));
 }
 
@@ -124,19 +126,10 @@ private void ResetButtonState()
     requestInFlight = false;
     buttonRenderer.material.color = defaultColor;
 }
-
-
-    private bool GetControllerRaycast(OVRInput.Controller controller, out RaycastHit hit)
-    {
-        Vector3 position = OVRInput.GetLocalControllerPosition(controller);
-        Quaternion rotation = OVRInput.GetLocalControllerRotation(controller);
-        Vector3 direction = rotation * Vector3.forward;
-
-        return Physics.Raycast(position, direction, out hit, 5f);
-    }
-
+     
     private IEnumerator SendImageToMathpix(byte[] imageBytes)
     {
+        Debug.Log("Starting API MatchPix");
         string mathpixUrl = "https://api.mathpix.com/v3/text";
 
         WWWForm form = new WWWForm();
@@ -323,7 +316,7 @@ private IEnumerator SendLatexToLatexOnHTTP(string texContent)
         System.IO.File.WriteAllBytes(path, pdfBytes);
         Debug.Log($"PDF saved to: {path}");
 
-        StartCoroutine(LocalConvertPDF(path));     // Changed to local ConvertPDF
+        StartCoroutine(LocalConvertPDF(pdfBytes));     // Changed to local ConvertPDF
     }
     else
     {
@@ -439,7 +432,6 @@ private IEnumerator ConvertPdfToPng(string pdfFilePath)
         {
             Debug.Log("ZIP downloaded: " + localZipPath);
             string extractedFolder = Path.Combine(Application.temporaryCachePath, "unzipped_images");
-            ExtractZipFile(localZipPath, extractedFolder);
         }
         else
         {
@@ -448,39 +440,6 @@ private IEnumerator ConvertPdfToPng(string pdfFilePath)
     }
 
     ResetButtonState();
-}
-
-
-
-
-private void ExtractZipFile(string zipFilePath, string outputFolder)
-{
-    try
-    {
-        if (Directory.Exists(outputFolder))
-            Directory.Delete(outputFolder, true);
-
-        ZipFile.ExtractToDirectory(zipFilePath, outputFolder);
-        Debug.Log($"ZIP extracted to: {outputFolder}");
-        
-        string[] files = Directory.GetFiles(outputFolder);
-        foreach (var file in files)
-        {
-            Debug.Log("Extracted file: " + file);
-            // TODO: Display first PNG on Mesh
-            if (file.EndsWith(".png"))
-                {
-                    DisplayImageOnUI(file);
-                    break;
-                }
-        }
-
-
-    }
-    catch (System.Exception ex)
-    {
-        Debug.LogError("Error extracting ZIP: " + ex.Message);
-    }
 }
 
 private string EscapeJson(string input)
@@ -504,51 +463,33 @@ private string EscapeJson(string input)
 }
 
 
-private IEnumerator LocalConvertPDF(string pdfFilePath)
+private IEnumerator LocalConvertPDF(byte[] pdfBytes)
     {
-    ConvertPDF converter = new ConvertPDF();
-    string jpegOutput = Path.Combine(Application.temporaryCachePath, "converted-pdf.jpg");
-
-    converter.Convert(pdfFilePath, jpegOutput, 1, 2, "jpeg", 400, 400);
-    Debug.Log("Converted Images from " + pdfFilePath + " in" + jpegOutput);
-
-    string[] files = Directory.GetFiles(Application.temporaryCachePath);
-    foreach (var file in files)
-    {
-        Debug.Log("Extracted file: " + file);
-        // TODO: Display first PNG on Mesh
-        if (file.EndsWith(".jpg"))
-        {
-            DisplayImageOnUI(file);
-            break;
-        }
-
-    }
-        yield return converter;
+    var bitmap = PDFtoImage.Conversion.ToImage(pdfBytes);
+    DisplayImageOnUI(bitmap);
+    yield return null;
     ResetButtonState();
     }
 
-private void DisplayImageOnUI(string imagePath)
+private void DisplayImageOnUI(SKBitmap bitmap)
 {
-    if (!File.Exists(imagePath))
-    {
-        Debug.LogError("Image file not found: " + imagePath);
-        return;
-    }
-
-    byte[] imageData = File.ReadAllBytes(imagePath);
-    Texture2D tex = new Texture2D(2, 2);
-    tex.LoadImage(imageData);
+    var tex = new Texture2D(bitmap.Width, bitmap.Height);
+    using var ms = new MemoryStream();
+    bitmap.Encode(ms, SKEncodedImageFormat.Png, 100);
+    ms.Position = 0;
+    tex.LoadImage(ms.ToArray());
 
     GameObject uiImage = GameObject.Find("SolutionImage");
 
     if (uiImage == null)
     {
         Debug.LogError("SolutionImage UI object not found.");
-        return;
+            return;
     }
 
     UnityEngine.UI.RawImage rawImage = uiImage.GetComponent<UnityEngine.UI.RawImage>();
+    Debug.Log(rawImage.rectTransform.localScale);
+    rawImage.rectTransform.sizeDelta = new Vector2(bitmap.Width / 5, bitmap.Height / 5);
     rawImage.texture = tex;
 
     Debug.Log("Image displayed on UI.");

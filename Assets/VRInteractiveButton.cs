@@ -368,7 +368,7 @@ public class VRInteractiveButton : MonoBehaviour
         bitmap.Encode(ms, SKEncodedImageFormat.Png, 100);
         ms.Position = 0;
         tex.LoadImage(ms.ToArray());
-        tex.anisoLevel = 14;        // Change to increase clarity at distance
+        tex.anisoLevel = 0;        // Change to increase clarity at distance
         GameObject uiImage = GameObject.Find("SolutionImage");
 
         if (uiImage == null)

@@ -13,11 +13,11 @@ public class WhiteBoardGL : NetworkBehaviour
     public HapticClip hapticClip;
     private HapticClipPlayer clipPlayer;
 
-
     //
     [Tooltip("The Render Texture to draw on")]
-    public RenderTexture renderTexture { get; set; }
+    public RenderTexture renderTexture;
     // Networked list
+    [Networked, Capacity(1024)]
     public NetworkLinkedList<DrawCommand> DrawCommands { get; }
 
 
@@ -70,7 +70,7 @@ public class WhiteBoardGL : NetworkBehaviour
     public List<BrushSettings> brushes = new List<BrushSettings>(); // List to hold multiple brushes
 
 
-
+    /*
     private void Start()
     {
         // Init haptic
@@ -100,12 +100,47 @@ public class WhiteBoardGL : NetworkBehaviour
         RenderTexture.active = null;
 
     }
+    */
+
+    private void Start()
+    {
+        // Init haptic
+        clipPlayer = new HapticClipPlayer(hapticClip);
+
+        // Initialize the brush material with a simple shader
+        brushMaterial = new Material(Shader.Find("Hidden/Internal-Colored"));
+
+        // Set the Render Texture as the main texture of the object's material
+        GetComponent<Renderer>().material.mainTexture = renderTexture;
+
+        // Clear the Render Texture at the start
+        RenderTexture.active = renderTexture;
+        // set the background color
+        GL.Clear(true, true, backGroundColor);
+        // set the brush color to match the backgroundColor if it is an eraser
+        foreach (BrushSettings brush in brushes)
+        {
+            // set the alpha level of the markers
+            brush.color.a = markerAlpha;
+
+            if (brush.isEraser)
+            {
+                brush.color = backGroundColor;
+            }
+        }
+        RenderTexture.active = null;
+    }
+
     // running in update gives a marker smear breakup effect.. in URP its recommended to run in RenderPipelineManager.endCameraRendering or
     // RenderPipelineManager.endFrameRendering, these are call backs, this will give sharp lines that don't look as much like a marker. For SRP its recommended to run
     // in OnPostRender(), the same result.. you can play with that and try adding noise etc but I was not able to find something that looked better than just 
     // running in Update()...
     public void Update()
     {
+        // Add null check for NetworkObject
+        //if (Object == null || !Object.IsValid)
+        //    return;
+
         if (HasStateAuthority)
         {
             ProcessLocalDrawing();
@@ -116,6 +151,7 @@ public class WhiteBoardGL : NetworkBehaviour
 
     private void ProcessLocalDrawing()
     {
+        Debug.Log("Processsing local");
         // Ensure the Render Texture is active for drawing
         RenderTexture.active = renderTexture;
 
@@ -136,21 +172,19 @@ public class WhiteBoardGL : NetworkBehaviour
     }
     private void RenderNetworkedDrawing()
     {
-        RenderTexture.active = renderTexture;
-        GL.PushMatrix();
-        GL.LoadPixelMatrix(0, renderTexture.width, renderTexture.height, 0);
+        // Check if spawned and render texture exists
+        //if (Object == null || !Object.IsValid || renderTexture == null)
+        //    return;
 
+        Debug.Log("Rendering sync");
         foreach (var cmd in DrawCommands)
         {
             DrawAtPosition(cmd);
         }
-
-        GL.PopMatrix();
-        RenderTexture.active = null;
     }
 
 
-    [Rpc(RpcSources.All, RpcTargets.All)]
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     private void RPC_AddDrawCommand(DrawCommand cmd)
     {
         if (!HasStateAuthority)
@@ -277,7 +311,7 @@ public class WhiteBoardGL : NetworkBehaviour
         // Add haptic
         clipPlayer.Play(Oculus.Haptics.Controller.Right);
 
-        //
+        Debug.Log("drawatposition");
 
         GL.PushMatrix();
         GL.LoadPixelMatrix(0, renderTexture.width, renderTexture.height, 0);

@@ -16,7 +16,22 @@ public class WhiteBoardGL : NetworkBehaviour
 
     //
     [Tooltip("The Render Texture to draw on")]
-    public RenderTexture renderTexture;
+    public RenderTexture renderTexture { get; set; }
+    // Networked list
+    public NetworkLinkedList<DrawCommand> DrawCommands { get; }
+
+
+    // Networked properties
+    public struct DrawCommand : INetworkStruct
+    {
+        public Vector2 position;
+        public Color color;
+        public float sizeX;
+        public float sizeY;
+        public float rotationAngle;
+    }
+
+    // Menu and local properties
     [Header("BrushSettings")]
     [Tooltip("Max distance for brush detection")]
     public float maxDistance = 0.2f;
@@ -54,6 +69,8 @@ public class WhiteBoardGL : NetworkBehaviour
     [Header("Add Brushes")]
     public List<BrushSettings> brushes = new List<BrushSettings>(); // List to hold multiple brushes
 
+
+
     private void Start()
     {
         // Init haptic
@@ -89,6 +106,16 @@ public class WhiteBoardGL : NetworkBehaviour
     // running in Update()...
     public void Update()
     {
+        if (HasStateAuthority)
+        {
+            ProcessLocalDrawing();
+        }
+        RenderNetworkedDrawing();
+
+    }
+
+    private void ProcessLocalDrawing()
+    {
         // Ensure the Render Texture is active for drawing
         RenderTexture.active = renderTexture;
 
@@ -107,7 +134,30 @@ public class WhiteBoardGL : NetworkBehaviour
         // Deactivate the Render Texture after drawing
         RenderTexture.active = null;
     }
+    private void RenderNetworkedDrawing()
+    {
+        RenderTexture.active = renderTexture;
+        GL.PushMatrix();
+        GL.LoadPixelMatrix(0, renderTexture.width, renderTexture.height, 0);
 
+        foreach (var cmd in DrawCommands)
+        {
+            DrawAtPosition(cmd);
+        }
+
+        GL.PopMatrix();
+        RenderTexture.active = null;
+    }
+
+
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    private void RPC_AddDrawCommand(DrawCommand cmd)
+    {
+        if (!HasStateAuthority)
+        {
+            DrawCommands.Add(cmd);
+        }
+    }
 
     private void DrawBrushOnTexture(BrushSettings brush)
     {
@@ -153,6 +203,16 @@ public class WhiteBoardGL : NetworkBehaviour
                 int y = (int)(uv.y * renderTexture.height);
                 Vector2 currentPosition = new Vector2(x, y);
 
+                ////////////////////////////////////////////
+                // Convert to networked propertie to be sent
+                var cmd = new DrawCommand
+                {
+                    position = currentPosition,
+                    color = brush.color,
+                    sizeX = brush.sizeX,
+                    sizeY = brush.sizeY,
+                    rotationAngle = brush.brushTransform.rotation.eulerAngles.z
+                };
                 // only draw when we need to by comparing current position to the last
                 if (!brush.isDrawing)
                 {
@@ -163,7 +223,9 @@ public class WhiteBoardGL : NetworkBehaviour
 
                 if (brush.isFirstDraw)
                 {
-                    DrawAtPosition(currentPosition, brush.color, brush.sizeX, brush.sizeY, brush.brushTransform.rotation.eulerAngles.z);
+                    //DrawAtPosition(cmd);
+                    DrawCommands.Add(cmd);
+                    RPC_AddDrawCommand(cmd);
                     brush.lastPosition = currentPosition;
                     brush.isFirstDraw = false;
                     return;
@@ -181,7 +243,9 @@ public class WhiteBoardGL : NetworkBehaviour
                 if (crossesHorizontalEdge || crossesVerticalEdge)
                 {
                     // If crossing an edge, do not interpolate. Just draw at the current position
-                    DrawAtPosition(currentPosition, brush.color, brush.sizeX, brush.sizeY, brush.brushTransform.rotation.eulerAngles.z);
+                    //DrawAtPosition(cmd);
+                    DrawCommands.Add(cmd);
+                    RPC_AddDrawCommand(cmd);
                 }
                 else
                 {
@@ -191,7 +255,10 @@ public class WhiteBoardGL : NetworkBehaviour
                     for (int i = 1; i <= steps; i++)
                     {
                         Vector2 interpolatedPosition = Vector2.Lerp(brush.lastPosition, currentPosition, i / (float)steps);
-                        DrawAtPosition(interpolatedPosition, brush.color, brush.sizeX, brush.sizeY, brush.brushTransform.rotation.eulerAngles.z);
+                        //DrawAtPosition(cmd);
+                        cmd.position = interpolatedPosition;
+                        DrawCommands.Add(cmd);
+                        RPC_AddDrawCommand(cmd);
                     }
                 }
 
@@ -205,7 +272,7 @@ public class WhiteBoardGL : NetworkBehaviour
         }
     }
 
-    private void DrawAtPosition(Vector2 position, Color color, float sizeX, float sizeY, float rotationAngle)
+    private void DrawAtPosition(DrawCommand cmd)
     {
         // Add haptic
         clipPlayer.Play(Oculus.Haptics.Controller.Right);
@@ -219,10 +286,10 @@ public class WhiteBoardGL : NetworkBehaviour
 
         GL.Begin(GL.QUADS);
         // GL.Color(brush.color);
-        GL.Color(color);
+        GL.Color(cmd.color);
 
         // Convert rotation angle to radians
-        float radians = rotationAngle * Mathf.Deg2Rad;
+        float radians = cmd.rotationAngle * Mathf.Deg2Rad;
 
         // Calculate the rotation matrix components 
         float cos = Mathf.Cos(radians);
@@ -230,10 +297,10 @@ public class WhiteBoardGL : NetworkBehaviour
 
         // Define the local offset vertices of the rectangle relative to the center
         Vector2[] vertices = new Vector2[4];
-        vertices[0] = new Vector2(-sizeX, -sizeY); // Bottom-left
-        vertices[1] = new Vector2(sizeX, -sizeY);  // Bottom-right
-        vertices[2] = new Vector2(sizeX, sizeY);   // Top-right
-        vertices[3] = new Vector2(-sizeX, sizeY);  // Top-left
+        vertices[0] = new Vector2(-cmd.sizeX, -cmd.sizeY); // Bottom-left
+        vertices[1] = new Vector2(cmd.sizeX, -cmd.sizeY);  // Bottom-right
+        vertices[2] = new Vector2(cmd.sizeX, cmd.sizeY);   // Top-right
+        vertices[3] = new Vector2(-cmd.sizeX, cmd.sizeY);  // Top-left
 
         // Rotate  each vertex to match the brush rotation,
         // this is so you can have a brush that is wide and thin and the paint will match the rotation
@@ -243,7 +310,7 @@ public class WhiteBoardGL : NetworkBehaviour
             float rotatedY = -vertices[i].x * sin + vertices[i].y * cos; // Inverted sine for clockwise rotation
 
             // Add the position offset to align with the center
-            GL.Vertex3(position.x + rotatedX, position.y + rotatedY, 0);
+            GL.Vertex3(cmd.position.x + rotatedX, cmd.position.y + rotatedY, 0);
         }
 
         // populate the pixles 

@@ -1,0 +1,25 @@
+ManifestFileVersion: 0
+UnityVersion: 6000.0.36f1
+CRC: 24347749
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 8bb9aaa164be0480ff3aa408007c5340
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 8a2495a88de0d3de1e83438e6f586662
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: 532e974c25319c5eb664edd11021f2f7
+HashAppended: 0
+ClassTypes:
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 89
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/Scenes/Board-multiplayer-test/ReflectionProbe-0.exr
+- Assets/Scenes/Board-multiplayer-test/Lightmap-0_comp_light.exr
+- Assets/Scenes/Board-multiplayer-test/ReflectionProbe-1.exr
+Dependencies: []

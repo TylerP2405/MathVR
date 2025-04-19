@@ -9,6 +9,10 @@ using Fusion;
 //using BNG; // only needed if using VR Interaction Framework
 public class WhiteBoardGL : NetworkBehaviour
 {
+    // Networked list
+    [Networked]
+    public Color NetworkedColor { get; set; }
+
     // Custom Haptic
     public HapticClip hapticClip;
     private HapticClipPlayer clipPlayer;
@@ -16,10 +20,6 @@ public class WhiteBoardGL : NetworkBehaviour
     //
     [Tooltip("The Render Texture to draw on")]
     public RenderTexture renderTexture;
-    // Networked list
-    [Networked, Capacity(1024)]
-    public NetworkLinkedList<DrawCommand> DrawCommands { get; }
-
 
     // Networked properties
     public struct DrawCommand : INetworkStruct
@@ -30,6 +30,8 @@ public class WhiteBoardGL : NetworkBehaviour
         public float sizeY;
         public float rotationAngle;
     }
+
+    public List<DrawCommand> DrawCommands = new List<DrawCommand>();
 
     // Menu and local properties
     [Header("BrushSettings")]
@@ -70,38 +72,6 @@ public class WhiteBoardGL : NetworkBehaviour
     public List<BrushSettings> brushes = new List<BrushSettings>(); // List to hold multiple brushes
 
 
-    /*
-    private void Start()
-    {
-        // Init haptic
-        clipPlayer = new HapticClipPlayer(hapticClip);
-
-        // Initialize the brush material with a simple shader
-        brushMaterial = new Material(Shader.Find("Hidden/Internal-Colored"));
-
-        // Set the Render Texture as the main texture of the object's material
-        GetComponent<Renderer>().material.mainTexture = renderTexture;
-
-        // Clear the Render Texture at the start
-        RenderTexture.active = renderTexture;
-        // set the background color
-        GL.Clear(true, true, backGroundColor);
-        // set the brush color to match the backgroundColor if it is an eraser
-        foreach (BrushSettings brush in brushes)
-        {
-            // set the alpha level of the markers
-            brush.color.a = markerAlpha;
-
-            if (brush.isEraser)
-            {
-                brush.color = backGroundColor;
-            }
-        }
-        RenderTexture.active = null;
-
-    }
-    */
-
     private void Start()
     {
         // Init haptic
@@ -135,6 +105,8 @@ public class WhiteBoardGL : NetworkBehaviour
     // RenderPipelineManager.endFrameRendering, these are call backs, this will give sharp lines that don't look as much like a marker. For SRP its recommended to run
     // in OnPostRender(), the same result.. you can play with that and try adding noise etc but I was not able to find something that looked better than just 
     // running in Update()...
+
+ 
     public void Update()
     {
         // Add null check for NetworkObject
@@ -145,13 +117,13 @@ public class WhiteBoardGL : NetworkBehaviour
         {
             ProcessLocalDrawing();
         }
-        RenderNetworkedDrawing();
+        //RenderNetworkedDrawing();
 
     }
 
     private void ProcessLocalDrawing()
     {
-        Debug.Log("Processsing local");
+        //Debug.Log("Processsing local");
         // Ensure the Render Texture is active for drawing
         RenderTexture.active = renderTexture;
 
@@ -168,7 +140,7 @@ public class WhiteBoardGL : NetworkBehaviour
         }
 
         // Deactivate the Render Texture after drawing
-        RenderTexture.active = null;
+        //RenderTexture.active = null;
     }
     private void RenderNetworkedDrawing()
     {
@@ -176,21 +148,32 @@ public class WhiteBoardGL : NetworkBehaviour
         //if (Object == null || !Object.IsValid || renderTexture == null)
         //    return;
 
-        Debug.Log("Rendering sync");
-        foreach (var cmd in DrawCommands)
+        
+        if (DrawCommands.Count > 0)
         {
-            DrawAtPosition(cmd);
+            foreach (var cmd in DrawCommands)
+            {
+                Debug.Log("Drawing at" + cmd.sizeX);
+                DrawAtPosition(cmd);
+                DrawCommands.Remove(cmd);
+            }
         }
+
     }
 
 
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    [Rpc(RpcSources.All, RpcTargets.All)]
     private void RPC_AddDrawCommand(DrawCommand cmd)
     {
-        if (!HasStateAuthority)
+        if (HasStateAuthority == false)
         {
-            DrawCommands.Add(cmd);
+            Debug.Log("rendertexture on NonStateAuthority");
+            RenderTexture.active = renderTexture;
         }
+
+        DrawAtPosition(cmd);
+        // Deactivate the Render Texture after drawing
+        RenderTexture.active = null;
     }
 
     private void DrawBrushOnTexture(BrushSettings brush)
@@ -258,7 +241,7 @@ public class WhiteBoardGL : NetworkBehaviour
                 if (brush.isFirstDraw)
                 {
                     //DrawAtPosition(cmd);
-                    DrawCommands.Add(cmd);
+                    //DrawCommands.Add(cmd);
                     RPC_AddDrawCommand(cmd);
                     brush.lastPosition = currentPosition;
                     brush.isFirstDraw = false;
@@ -278,7 +261,7 @@ public class WhiteBoardGL : NetworkBehaviour
                 {
                     // If crossing an edge, do not interpolate. Just draw at the current position
                     //DrawAtPosition(cmd);
-                    DrawCommands.Add(cmd);
+                    //DrawCommands.Add(cmd);
                     RPC_AddDrawCommand(cmd);
                 }
                 else
@@ -291,7 +274,7 @@ public class WhiteBoardGL : NetworkBehaviour
                         Vector2 interpolatedPosition = Vector2.Lerp(brush.lastPosition, currentPosition, i / (float)steps);
                         //DrawAtPosition(cmd);
                         cmd.position = interpolatedPosition;
-                        DrawCommands.Add(cmd);
+                        //DrawCommands.Add(cmd);
                         RPC_AddDrawCommand(cmd);
                     }
                 }
@@ -351,4 +334,5 @@ public class WhiteBoardGL : NetworkBehaviour
         GL.End();
         GL.PopMatrix();
     }
+ 
 }

@@ -1,0 +1,28 @@
+ManifestFileVersion: 0
+UnityVersion: 6000.0.36f1
+CRC: 3913696967
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: c9a5c399a274a6e1cb1928f3aef9f37e
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 8ed81b296f435bff7379a355cd1d66d9
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: 801780e82cfe313722f18a629fbf3ce3
+HashAppended: 0
+ClassTypes:
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Packages/com.meta.xr.sdk.core/Editor/BuildingBlocks/BlockData/HandTracking/Materials/SystemGestureSkeletonBoneMaterial.mat
+- Assets/Whiteboard/Materials/WhiteboardMaterial2.mat
+Dependencies:
+- E:/Unity VR Projects/MathVR/OVRAssetBundles/OVRMasterBundle/asset_png0
+- E:/Unity VR Projects/MathVR/OVRAssetBundles/OVRMasterBundle/asset_shader0

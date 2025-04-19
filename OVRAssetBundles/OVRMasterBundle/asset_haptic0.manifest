@@ -1,0 +1,23 @@
+ManifestFileVersion: 0
+UnityVersion: 6000.0.36f1
+CRC: 3558153236
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 01dae19f1fc5b4af9115291c0b4436f2
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 6125d05bd006b99a3066c118f2d740c1
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: 996e3593d3f349e446665dd5b398ad95
+HashAppended: 0
+ClassTypes:
+- Class: 114
+  Script: {fileID: 11500000, guid: 9886bf91a3f044cb38340b34c1c64483, type: 3}
+- Class: 115
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/VR Whiteboard/UX/Haptics/ui_close.haptic
+Dependencies: []

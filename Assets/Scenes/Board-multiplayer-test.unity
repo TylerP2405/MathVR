@@ -20774,7 +20774,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05d36dde835e14743be6f979bbdf040f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _NetworkedColor: {r: 0, g: 0, b: 0, a: 0}
   hapticClip: {fileID: 2460798210113038985, guid: e10f539385918f944b5c3c9f15e6067b, type: 3}
+  renderTexture: {fileID: 8400000, guid: 5467026068204a549a8d13f8980ac424, type: 2}
   maxDistance: 0.014
   minBrushDistance: 2
   backGroundColor: {r: 1, g: 1, b: 1, a: 1}
@@ -20784,8 +20786,8 @@ MonoBehaviour:
   - brushGrabbable: {fileID: 60950168}
     brushTransform: {fileID: 2123339103}
     color: {r: 0, g: 0, b: 0, a: 0}
-    sizeY: 2
-    sizeX: 2
+    sizeY: 3
+    sizeX: 3
     isEraser: 0
     lastPosition: {x: 0, y: 0}
     isFirstDraw: 0
@@ -20802,8 +20804,8 @@ MonoBehaviour:
   - brushGrabbable: {fileID: 839426525}
     brushTransform: {fileID: 997094256}
     color: {r: 0.8113208, g: 0.10868638, b: 0.2070551, a: 0}
-    sizeY: 1
-    sizeX: 1
+    sizeY: 2
+    sizeX: 2
     isEraser: 0
     lastPosition: {x: 0, y: 0}
     isFirstDraw: 0
@@ -64418,6 +64420,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 543450652710397837}
+  - component: {fileID: 919132148977483064}
   m_Layer: 0
   m_Name: VR WhiteBoard
   m_TagString: Untagged
@@ -64425,6 +64428,25 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &919132148977483064
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 919132148977483063}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SortKey: 675086960
+  ObjectInterest: 1
+  Flags: 524289
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 686209943}
+  ForceRemoteRenderTimeframe: 0
 --- !u!1001 &2430523750576325525
 PrefabInstance:
   m_ObjectHideFlags: 0

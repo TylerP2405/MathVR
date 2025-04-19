@@ -1,0 +1,151 @@
+ManifestFileVersion: 0
+UnityVersion: 6000.0.36f1
+CRC: 2720031778
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 4a7dd065fcdead5f1c16f1823016579f
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: bba7dac0db2ff65722ca0e46b3acfd93
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: 0b750c147d03f4743abc78acdfe73048
+HashAppended: 0
+ClassTypes:
+- Class: 1
+  Script: {instanceID: 0}
+- Class: 4
+  Script: {instanceID: 0}
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+- Class: 72
+  Script: {instanceID: 0}
+- Class: 82
+  Script: {instanceID: 0}
+- Class: 114
+  Script: {fileID: 11500000, guid: a509dbf839e0e4044a7affab5b5a3e55, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: f892af86578f82443a9682973148029a, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 78004595c6cead044be53137cdf8db19, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 59f8146938fff824cb5fd77236b75775, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 488cfafa131933046a924063017e8372, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 56032097b1ab3a540b3349af62f82310, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 3861555276e1a07489d3c0971e091e46, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 0e0330898740b1e4ca2071e639e5ecbd, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 33284fe95284c70428a2dcce353bfdfd, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: ecd1062ecb075db4a83f03b03ba8100d, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 637f19aef5eccc146a6ab77a1d4ab0a8, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 0b47856a33046ce40862a2fddb86623b, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 1db8ea62a613f0d488f8f6d4a32758db, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 6937544d08e2ba34da6ff4ab90cbfd84, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: cbe2c8f3d0dd0c24aa44600b74586d5c, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 81521d61d0efc3a4b87b3783aee9f4a4, type: 3}
+- Class: 114
+  Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+- Class: 114
+  Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+- Class: 114
+  Script: {fileID: 1541381998, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+- Class: 115
+  Script: {instanceID: 0}
+- Class: 128
+  Script: {instanceID: 0}
+- Class: 213
+  Script: {instanceID: 0}
+- Class: 222
+  Script: {instanceID: 0}
+- Class: 223
+  Script: {instanceID: 0}
+- Class: 224
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers:
+- AssemblyName: Fusion.Runtime
+  ClassName: Fusion.NetworkObjectGuid
+- AssemblyName: Fusion.Runtime
+  ClassName: Fusion.NetworkString`1
+- AssemblyName: Fusion.Runtime
+  ClassName: Fusion._64
+- AssemblyName: Oculus.AvatarSDK2.Samples
+  ClassName: Oculus.Avatar2.Experimental.OvrAvatarAnimationBehavior/JointOverride
+- AssemblyName: Oculus.AvatarSDK2.Samples
+  ClassName: Oculus.Avatar2.Experimental.OvrAvatarAnimationBehavior/JointOverridesContainer
+- AssemblyName: Oculus.AvatarSDK2.Samples
+  ClassName: Oculus.Avatar2.Experimental.OvrAvatarAnimationBehavior/MRAnimationOptions
+- AssemblyName: Oculus.AvatarSDK2
+  ClassName: Oculus.Avatar2.AvatarLODManager/Debug
+- AssemblyName: Oculus.AvatarSDK2
+  ClassName: Oculus.Avatar2.CAPI/ovrAvatar2EntityCreateInfo
+- AssemblyName: Oculus.AvatarSDK2
+  ClassName: Oculus.Avatar2.CAPI/ovrAvatar2EntityFeatures
+- AssemblyName: Oculus.AvatarSDK2
+  ClassName: Oculus.Avatar2.CAPI/ovrAvatar2EntityFilters
+- AssemblyName: Oculus.AvatarSDK2
+  ClassName: Oculus.Avatar2.CAPI/ovrAvatar2EntityLODFlags
+- AssemblyName: Oculus.AvatarSDK2
+  ClassName: Oculus.Avatar2.CAPI/ovrAvatar2EntityManifestationFlags
+- AssemblyName: Oculus.AvatarSDK2
+  ClassName: Oculus.Avatar2.CAPI/ovrAvatar2EntityQuality
+- AssemblyName: Oculus.AvatarSDK2
+  ClassName: Oculus.Avatar2.CAPI/ovrAvatar2EntitySubMeshInclusionFlags
+- AssemblyName: Oculus.AvatarSDK2
+  ClassName: Oculus.Avatar2.CAPI/ovrAvatar2EntityViewFlags
+- AssemblyName: Oculus.AvatarSDK2
+  ClassName: Oculus.Avatar2.OvrAvatarEntity/AvatarLoadFailedEvent
+- AssemblyName: Oculus.AvatarSDK2
+  ClassName: Oculus.Avatar2.OvrAvatarEntity/AvatarStateEvent
+- AssemblyName: Oculus.AvatarSDK2
+  ClassName: Oculus.Avatar2.OvrAvatarEntity/DebugDrawing
+- AssemblyName: Oculus.AvatarSDK2
+  ClassName: Oculus.Avatar2.OvrAvatarManager/AvatarFootFallEvent
+- AssemblyName: Oculus.AvatarSDK2
+  ClassName: Oculus.Avatar2.OvrAvatarManager/SkinnerSupport
+- AssemblyName: UnityEngine.CoreModule
+  ClassName: UnityEngine.Events.PersistentCallGroup
+- AssemblyName: UnityEngine.CoreModule
+  ClassName: UnityEngine.RectOffset
+- AssemblyName: UnityEngine.UI
+  ClassName: UnityEngine.UI.FontData
+- AssemblyName: UnityEngine.UI
+  ClassName: UnityEngine.UI.MaskableGraphic/CullStateChangedEvent
+Assets:
+- Assets/Samples/Meta Avatars SDK/35.0.0/Sample Scenes/Common/Prefabs/Rendering/AVATAR_LOD_DEBUG_CANVAS.prefab
+- Packages/com.meta.xr.sdk.core/Scripts/BuildingBlocks/MultiplayerBlocks/PhotonFusion/NetworkedAvatar/Prefabs/FusionAvatar.prefab
+- Assets/Samples/Meta Avatars SDK/35.0.0/Sample Scenes/Common/Prefabs/AvatarSdkManager/AvatarSdkManagerBase.prefab
+- Packages/com.meta.xr.sdk.core/Scripts/BuildingBlocks/MultiplayerBlocks/PhotonFusion/PlayerNameTag/Prefabs/NetworkedRig.prefab
+- Assets/Samples/Meta Avatars SDK/35.0.0/Sample Scenes/Common/Prefabs/AvatarSdkManager/Recommended/AvatarSdkManagerStyle2Meta.prefab
+- Packages/com.meta.xr.sdk.core/Scripts/BuildingBlocks/MultiplayerBlocks/PhotonFusion/NetworkedAvatar/Prefabs/FusionAvatarSdk28Plus.prefab
+- Assets/Samples/Meta Avatars SDK/35.0.0/Sample Scenes/Common/Prefabs/LipSyncInput.prefab
+Dependencies:
+- E:/Unity VR Projects/MathVR/OVRAssetBundles/OVRMasterBundle/asset_asset0
+- E:/Unity VR Projects/MathVR/OVRAssetBundles/OVRMasterBundle/asset_compute0
+- E:/Unity VR Projects/MathVR/OVRAssetBundles/OVRMasterBundle/asset_resources
+- E:/Unity VR Projects/MathVR/OVRAssetBundles/OVRMasterBundle/asset_shader0

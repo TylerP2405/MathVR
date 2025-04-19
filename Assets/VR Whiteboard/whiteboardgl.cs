@@ -109,23 +109,10 @@ public class WhiteBoardGL : NetworkBehaviour
  
     public void Update()
     {
-        // Add null check for NetworkObject
-        //if (Object == null || !Object.IsValid)
-        //    return;
-
-        if (HasStateAuthority)
-        {
-            ProcessLocalDrawing();
-        }
-        //RenderNetworkedDrawing();
-
-    }
-
-    private void ProcessLocalDrawing()
-    {
+ 
         //Debug.Log("Processsing local");
         // Ensure the Render Texture is active for drawing
-        RenderTexture.active = renderTexture;
+        //RenderTexture.active = renderTexture;
 
         // Draw each brush on the texture
         foreach (var brush in brushes)
@@ -141,39 +128,21 @@ public class WhiteBoardGL : NetworkBehaviour
 
         // Deactivate the Render Texture after drawing
         //RenderTexture.active = null;
-    }
-    private void RenderNetworkedDrawing()
-    {
-        // Check if spawned and render texture exists
-        //if (Object == null || !Object.IsValid || renderTexture == null)
-        //    return;
 
-        
-        if (DrawCommands.Count > 0)
-        {
-            foreach (var cmd in DrawCommands)
-            {
-                Debug.Log("Drawing at" + cmd.sizeX);
-                DrawAtPosition(cmd);
-                DrawCommands.Remove(cmd);
-            }
-        }
 
     }
-
 
     [Rpc(RpcSources.All, RpcTargets.All)]
     private void RPC_AddDrawCommand(DrawCommand cmd)
     {
-        if (HasStateAuthority == false)
-        {
-            Debug.Log("rendertexture on NonStateAuthority");
-            RenderTexture.active = renderTexture;
-        }
 
+        Debug.Log("rendertexture on all");
+        RenderTexture.active = renderTexture;
         DrawAtPosition(cmd);
-        // Deactivate the Render Texture after drawing
         RenderTexture.active = null;
+
+        // Deactivate the Render Texture after drawing
+        //RenderTexture.active = null;
     }
 
     private void DrawBrushOnTexture(BrushSettings brush)

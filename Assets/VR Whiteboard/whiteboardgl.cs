@@ -4,6 +4,7 @@ using UnityEngine;
 using Oculus.Interaction;
 using Oculus.Haptics;
 using Fusion;
+using static WhiteBoardGL;
 
 
 //using BNG; // only needed if using VR Interaction Framework
@@ -31,7 +32,10 @@ public class WhiteBoardGL : NetworkBehaviour
         public float rotationAngle;
     }
 
-    public List<DrawCommand> DrawCommands = new List<DrawCommand>();
+    private List<DrawCommand> localBuffer = new List<DrawCommand>();
+    private float sendInterval = 0.05f; // 20 times per second
+    private float sendTimer = 0f;
+
 
     // Menu and local properties
     [Header("BrushSettings")]
@@ -56,6 +60,7 @@ public class WhiteBoardGL : NetworkBehaviour
     {
         public Grabbable brushGrabbable; //  Bruch Grabbable        
         public Transform brushTransform;// Transform of the brush
+        public NetworkObject brushNetObj;
         public Color color = Color.black;// Brush color
         public int sizeY = 20;// Brush size in pixels
         public int sizeX = 20;// Brush size in pixels
@@ -120,25 +125,35 @@ public class WhiteBoardGL : NetworkBehaviour
             // check if the brush is being held to only run functions for the brushs being used
             // change this to a holding check with what ever framework you use, this is a check to make sure that only 
             // the marker you are holding is processing any functions for performance
-            if (brush.brushGrabbable && (brush.brushGrabbable.SelectingPointsCount > 0))
+            if (brush.brushGrabbable && (brush.brushGrabbable.SelectingPointsCount > 0) && (brush.brushNetObj.HasStateAuthority))
             {
+                RenderTexture.active = renderTexture;
                 DrawBrushOnTexture(brush);
+                RenderTexture.active = null;
             }
+        }
+        sendTimer += Time.deltaTime;
+        if (sendTimer >= sendInterval && localBuffer.Count > 0)
+        {
+            RPC_AddDrawCommand(localBuffer.ToArray());
+            localBuffer.Clear();
+            sendTimer = 0f;
         }
 
         // Deactivate the Render Texture after drawing
         //RenderTexture.active = null;
-
-
     }
 
     [Rpc(RpcSources.All, RpcTargets.All)]
-    private void RPC_AddDrawCommand(DrawCommand cmd)
+    private void RPC_AddDrawCommand(DrawCommand[] cmds)
     {
 
         Debug.Log("rendertexture on all");
         RenderTexture.active = renderTexture;
-        DrawAtPosition(cmd);
+        foreach (var cmd in cmds)
+        {
+            DrawAtPosition(cmd);
+        }
         RenderTexture.active = null;
 
         // Deactivate the Render Texture after drawing
@@ -209,9 +224,8 @@ public class WhiteBoardGL : NetworkBehaviour
 
                 if (brush.isFirstDraw)
                 {
-                    //DrawAtPosition(cmd);
-                    //DrawCommands.Add(cmd);
-                    RPC_AddDrawCommand(cmd);
+                    DrawAtPosition(cmd);
+                    localBuffer.Add(cmd);
                     brush.lastPosition = currentPosition;
                     brush.isFirstDraw = false;
                     return;
@@ -229,9 +243,10 @@ public class WhiteBoardGL : NetworkBehaviour
                 if (crossesHorizontalEdge || crossesVerticalEdge)
                 {
                     // If crossing an edge, do not interpolate. Just draw at the current position
-                    //DrawAtPosition(cmd);
+                    DrawAtPosition(cmd);
                     //DrawCommands.Add(cmd);
-                    RPC_AddDrawCommand(cmd);
+                    //RPC_AddDrawCommand(cmd);
+                    localBuffer.Add(cmd);
                 }
                 else
                 {
@@ -241,10 +256,9 @@ public class WhiteBoardGL : NetworkBehaviour
                     for (int i = 1; i <= steps; i++)
                     {
                         Vector2 interpolatedPosition = Vector2.Lerp(brush.lastPosition, currentPosition, i / (float)steps);
-                        //DrawAtPosition(cmd);
+                        DrawAtPosition(cmd);
                         cmd.position = interpolatedPosition;
-                        //DrawCommands.Add(cmd);
-                        RPC_AddDrawCommand(cmd);
+                        localBuffer.Add(cmd);
                     }
                 }
 
@@ -303,5 +317,5 @@ public class WhiteBoardGL : NetworkBehaviour
         GL.End();
         GL.PopMatrix();
     }
- 
 }
+

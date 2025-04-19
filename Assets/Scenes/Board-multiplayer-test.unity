@@ -20785,6 +20785,7 @@ MonoBehaviour:
   brushes:
   - brushGrabbable: {fileID: 60950168}
     brushTransform: {fileID: 2123339103}
+    brushNetObj: {fileID: 794473158}
     color: {r: 0, g: 0, b: 0, a: 0}
     sizeY: 3
     sizeX: 3
@@ -20794,6 +20795,7 @@ MonoBehaviour:
     isDrawing: 0
   - brushGrabbable: {fileID: 1211096042}
     brushTransform: {fileID: 1313733987}
+    brushNetObj: {fileID: 8562625290899751629}
     color: {r: 0, g: 0, b: 0, a: 0}
     sizeY: 50
     sizeX: 120
@@ -20803,6 +20805,7 @@ MonoBehaviour:
     isDrawing: 0
   - brushGrabbable: {fileID: 839426525}
     brushTransform: {fileID: 997094256}
+    brushNetObj: {fileID: 1386799469}
     color: {r: 0.8113208, g: 0.10868638, b: 0.2070551, a: 0}
     sizeY: 2
     sizeX: 2

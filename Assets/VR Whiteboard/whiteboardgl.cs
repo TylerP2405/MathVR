@@ -35,6 +35,9 @@ public class WhiteBoardGL : NetworkBehaviour
     private List<DrawCommand> localBuffer = new List<DrawCommand>();
     private float sendInterval = 0.05f; // 20 times per second
     private float sendTimer = 0f;
+    private const int MAX_BUFFER_PER_UPDATE = 1000;
+    [Networked]
+    public NetworkObject BrushGlobalNetObj { get; set; }
 
 
     // Menu and local properties
@@ -127,17 +130,42 @@ public class WhiteBoardGL : NetworkBehaviour
             // the marker you are holding is processing any functions for performance
             if (brush.brushGrabbable && (brush.brushGrabbable.SelectingPointsCount > 0) && (brush.brushNetObj.HasStateAuthority))
             {
+                BrushGlobalNetObj = brush.brushNetObj;
                 RenderTexture.active = renderTexture;
                 DrawBrushOnTexture(brush);
                 RenderTexture.active = null;
             }
         }
+
+
+        // Draw from local buffer (from others players)
         sendTimer += Time.deltaTime;
         if (sendTimer >= sendInterval && localBuffer.Count > 0)
         {
-            RPC_AddDrawCommand(localBuffer.ToArray());
-            localBuffer.Clear();
+            //var cmds = localBuffer.ToArray();
             sendTimer = 0f;
+            Debug.Log("rendertexture from buffer");
+            int commandsToProcess = Mathf.Min(MAX_BUFFER_PER_UPDATE, localBuffer.Count);
+            RenderTexture.active = renderTexture;
+            /*
+            foreach (var cmd in cmds)
+            {
+                DrawAtPosition(cmd);
+            }
+            localBuffer.Clear();
+            */
+            // Only process up to MAX_BUFFER_PER_UPDATE commands
+            for (int i = 0; i < commandsToProcess; i++)
+            {
+                DrawAtPosition(localBuffer[i]);
+            }
+
+            // Remove only the processed commands
+            localBuffer.RemoveRange(0, commandsToProcess);
+
+
+            RenderTexture.active = null;
+
         }
 
         // Deactivate the Render Texture after drawing
@@ -145,19 +173,13 @@ public class WhiteBoardGL : NetworkBehaviour
     }
 
     [Rpc(RpcSources.All, RpcTargets.All)]
-    private void RPC_AddDrawCommand(DrawCommand[] cmds)
+    private void RPC_AddDrawCommand(DrawCommand cmd)
     {
-
-        Debug.Log("rendertexture on all");
-        RenderTexture.active = renderTexture;
-        foreach (var cmd in cmds)
+        if (!BrushGlobalNetObj.HasStateAuthority)
         {
-            DrawAtPosition(cmd);
+            Debug.Log("add draw points on others");
+            localBuffer.Add(cmd);
         }
-        RenderTexture.active = null;
-
-        // Deactivate the Render Texture after drawing
-        //RenderTexture.active = null;
     }
 
     private void DrawBrushOnTexture(BrushSettings brush)
@@ -225,7 +247,7 @@ public class WhiteBoardGL : NetworkBehaviour
                 if (brush.isFirstDraw)
                 {
                     DrawAtPosition(cmd);
-                    localBuffer.Add(cmd);
+                    RPC_AddDrawCommand(cmd);
                     brush.lastPosition = currentPosition;
                     brush.isFirstDraw = false;
                     return;
@@ -246,7 +268,7 @@ public class WhiteBoardGL : NetworkBehaviour
                     DrawAtPosition(cmd);
                     //DrawCommands.Add(cmd);
                     //RPC_AddDrawCommand(cmd);
-                    localBuffer.Add(cmd);
+                    RPC_AddDrawCommand(cmd);
                 }
                 else
                 {
@@ -258,7 +280,7 @@ public class WhiteBoardGL : NetworkBehaviour
                         Vector2 interpolatedPosition = Vector2.Lerp(brush.lastPosition, currentPosition, i / (float)steps);
                         DrawAtPosition(cmd);
                         cmd.position = interpolatedPosition;
-                        localBuffer.Add(cmd);
+                        RPC_AddDrawCommand(cmd);
                     }
                 }
 
@@ -276,8 +298,6 @@ public class WhiteBoardGL : NetworkBehaviour
     {
         // Add haptic
         clipPlayer.Play(Oculus.Haptics.Controller.Right);
-
-        Debug.Log("drawatposition");
 
         GL.PushMatrix();
         GL.LoadPixelMatrix(0, renderTexture.width, renderTexture.height, 0);

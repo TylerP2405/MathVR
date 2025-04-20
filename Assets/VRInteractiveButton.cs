@@ -361,7 +361,7 @@ public class VRInteractiveButton : MonoBehaviour
         ResetButtonState();
     }
 
-    private void DisplayImageOnUI(SKBitmap bitmap)
+    /*private void DisplayImageOnUI(SKBitmap bitmap)
     {
         //var tex = new Texture2D(bitmap.Width, bitmap.Height, TextureFormat.RGBA32, mipCount: 3, linear: true);
         var tex = new Texture2D(bitmap.Width, bitmap.Height);
@@ -388,6 +388,46 @@ public class VRInteractiveButton : MonoBehaviour
         rawImage.rectTransform.sizeDelta = new Vector2(bitmap.Width / 5, bitmap.Height / 5);
         rawImage.texture = tex;
         Debug.Log("Image displayed on UI.");
+    }*/
+
+    private void DisplayImageOnUI(SKBitmap bitmap)
+    {
+        var tex = new Texture2D(bitmap.Width, bitmap.Height);
+        using var ms = new MemoryStream();
+        bitmap.Encode(ms, SKEncodedImageFormat.Png, 100);
+        ms.Position = 0;
+        tex.LoadImage(ms.ToArray());
+
+        tex.filterMode = FilterMode.Trilinear;
+        tex.mipMapBias = -0.7f;
+        tex.anisoLevel = 9;
+
+        GameObject uiImage = GameObject.Find("SolutionImage");
+        if (uiImage == null)
+        {
+            Debug.LogError("SolutionImage UI object not found.");
+            return;
+        }
+
+        var rawImage = uiImage.GetComponent<UnityEngine.UI.RawImage>();
+
+        // Set texture
+        rawImage.texture = tex;
+
+        // Scaling factor to reduce raw size (optional)
+        float scale = 0.2f;
+        float width = bitmap.Width * scale;
+        float height = bitmap.Height * scale;
+
+        // Resize the RawImage
+        rawImage.rectTransform.sizeDelta = new Vector2(width, height);
+
+        // Update the Content container (parent of SolutionImage)
+        RectTransform parentContent = rawImage.transform.parent.GetComponent<RectTransform>();
+        parentContent.sizeDelta = new Vector2(width, height);
+
+        Debug.Log("Image displayed with scroll support.");
     }
+
 
 }

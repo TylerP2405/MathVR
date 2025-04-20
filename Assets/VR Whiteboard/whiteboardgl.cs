@@ -5,25 +5,26 @@ using Oculus.Interaction;
 using Oculus.Haptics;
 using Fusion;
 using static WhiteBoardGL;
+using System.Linq;
+using Oculus.Interaction.Input;
 
 
 //using BNG; // only needed if using VR Interaction Framework
 public class WhiteBoardGL : NetworkBehaviour
 {
-    // Networked list
-    [Networked]
-    public Color NetworkedColor { get; set; }
-
     // Custom Haptic
     public HapticClip hapticClip;
     private HapticClipPlayer clipPlayer;
+    private float frequency = 0.5f;
+    private float amplitude = 0.2f;
+    private float duration = 0.5f;
 
     //
     [Tooltip("The Render Texture to draw on")]
     public RenderTexture renderTexture;
 
     // Networked properties
-    public struct DrawCommand : INetworkStruct
+    public struct DrawPoint : INetworkStruct
     {
         public Vector2 position;
         public Color color;
@@ -32,10 +33,12 @@ public class WhiteBoardGL : NetworkBehaviour
         public float rotationAngle;
     }
 
-    private List<DrawCommand> localBuffer = new List<DrawCommand>();
-    private float sendInterval = 0.05f; // 20 times per second
-    private float sendTimer = 0f;
+    private List<DrawPoint> localBuffer = new List<DrawPoint>();
+
+    // Maximum budget for drawing per frame
     private const int MAX_BUFFER_PER_UPDATE = 1000;
+
+    // Check NetworkState of Brush object
     [Networked]
     public NetworkObject BrushGlobalNetObj { get; set; }
 
@@ -62,6 +65,7 @@ public class WhiteBoardGL : NetworkBehaviour
     public class BrushSettings
     {
         public Grabbable brushGrabbable; //  Bruch Grabbable        
+        public GrabInteractable grabInteractable;
         public Transform brushTransform;// Transform of the brush
         public NetworkObject brushNetObj;
         public Color color = Color.black;// Brush color
@@ -120,7 +124,7 @@ public class WhiteBoardGL : NetworkBehaviour
  
         //Debug.Log("Processsing local");
         // Ensure the Render Texture is active for drawing
-        //RenderTexture.active = renderTexture;
+        RenderTexture.active = renderTexture;
 
         // Draw each brush on the texture
         foreach (var brush in brushes)
@@ -128,52 +132,39 @@ public class WhiteBoardGL : NetworkBehaviour
             // check if the brush is being held to only run functions for the brushs being used
             // change this to a holding check with what ever framework you use, this is a check to make sure that only 
             // the marker you are holding is processing any functions for performance
-            if (brush.brushGrabbable && (brush.brushGrabbable.SelectingPointsCount > 0) && (brush.brushNetObj.HasStateAuthority))
+            if ((brush.grabInteractable.State == Oculus.Interaction.InteractableState.Select) && (brush.brushNetObj.HasStateAuthority))
             {
                 BrushGlobalNetObj = brush.brushNetObj;
-                RenderTexture.active = renderTexture;
                 DrawBrushOnTexture(brush);
-                RenderTexture.active = null;
             }
         }
 
 
-        // Draw from local buffer (from others players)
-        sendTimer += Time.deltaTime;
-        if (sendTimer >= sendInterval && localBuffer.Count > 0)
+        // Draw from local buffer (from others players) with throttling
+        if (localBuffer.Count > 0)
         {
-            //var cmds = localBuffer.ToArray();
-            sendTimer = 0f;
             Debug.Log("rendertexture from buffer");
-            int commandsToProcess = Mathf.Min(MAX_BUFFER_PER_UPDATE, localBuffer.Count);
-            RenderTexture.active = renderTexture;
-            /*
-            foreach (var cmd in cmds)
-            {
-                DrawAtPosition(cmd);
-            }
-            localBuffer.Clear();
-            */
+            int pointsToProcess = Mathf.Min(MAX_BUFFER_PER_UPDATE, localBuffer.Count);
+
             // Only process up to MAX_BUFFER_PER_UPDATE commands
-            for (int i = 0; i < commandsToProcess; i++)
+            for (int i = 0; i < pointsToProcess; i++)
             {
                 DrawAtPosition(localBuffer[i]);
             }
 
             // Remove only the processed commands
-            localBuffer.RemoveRange(0, commandsToProcess);
-
-
-            RenderTexture.active = null;
+            localBuffer.RemoveRange(0, pointsToProcess);
 
         }
 
         // Deactivate the Render Texture after drawing
-        //RenderTexture.active = null;
+        RenderTexture.active = null;
     }
 
+
+    // Send draw points into other players' localBuffer
     [Rpc(RpcSources.All, RpcTargets.All)]
-    private void RPC_AddDrawCommand(DrawCommand cmd)
+    private void RPC_AddDrawPoint(DrawPoint cmd)
     {
         if (!BrushGlobalNetObj.HasStateAuthority)
         {
@@ -228,7 +219,7 @@ public class WhiteBoardGL : NetworkBehaviour
 
                 ////////////////////////////////////////////
                 // Convert to networked propertie to be sent
-                var cmd = new DrawCommand
+                var cmd = new DrawPoint
                 {
                     position = currentPosition,
                     color = brush.color,
@@ -247,7 +238,7 @@ public class WhiteBoardGL : NetworkBehaviour
                 if (brush.isFirstDraw)
                 {
                     DrawAtPosition(cmd);
-                    RPC_AddDrawCommand(cmd);
+                    RPC_AddDrawPoint(cmd);
                     brush.lastPosition = currentPosition;
                     brush.isFirstDraw = false;
                     return;
@@ -268,7 +259,7 @@ public class WhiteBoardGL : NetworkBehaviour
                     DrawAtPosition(cmd);
                     //DrawCommands.Add(cmd);
                     //RPC_AddDrawCommand(cmd);
-                    RPC_AddDrawCommand(cmd);
+                    RPC_AddDrawPoint(cmd);
                 }
                 else
                 {
@@ -280,11 +271,14 @@ public class WhiteBoardGL : NetworkBehaviour
                         Vector2 interpolatedPosition = Vector2.Lerp(brush.lastPosition, currentPosition, i / (float)steps);
                         DrawAtPosition(cmd);
                         cmd.position = interpolatedPosition;
-                        RPC_AddDrawCommand(cmd);
+                        RPC_AddDrawPoint(cmd);
                     }
                 }
 
                 brush.lastPosition = currentPosition; // Update the last drawn position
+
+                // Play haptic when drawing
+                playHaptic(brush);
             }
         }
         else
@@ -294,10 +288,8 @@ public class WhiteBoardGL : NetworkBehaviour
         }
     }
 
-    private void DrawAtPosition(DrawCommand cmd)
+    private void DrawAtPosition(DrawPoint cmd)
     {
-        // Add haptic
-        clipPlayer.Play(Oculus.Haptics.Controller.Right);
 
         GL.PushMatrix();
         GL.LoadPixelMatrix(0, renderTexture.width, renderTexture.height, 0);
@@ -337,5 +329,48 @@ public class WhiteBoardGL : NetworkBehaviour
         GL.End();
         GL.PopMatrix();
     }
+
+    #region Haptic
+    private void playHaptic(BrushSettings brush)
+    {
+        ControllerRef controllerRef = brush.grabInteractable.GetComponent<ControllerRef>();
+
+        // Debug play
+        clipPlayer.Play(Oculus.Haptics.Controller.Right);
+
+        if (controllerRef)
+        {
+            if (controllerRef.Handedness == Handedness.Right)
+                TriggerHaptics(OVRInput.Controller.RTouch);
+            else
+                TriggerHaptics(OVRInput.Controller.LTouch);
+
+        }
+        else
+        {
+            Debug.LogError("No controllerRef found");
+        }
+    }
+    public void TriggerHaptics(OVRInput.Controller controller)
+    {
+        if (hapticClip)
+            if (controller == OVRInput.Controller.RTouch)
+            {
+                clipPlayer.Play(Oculus.Haptics.Controller.Right);
+            }
+            else if (controller == OVRInput.Controller.LTouch)
+            {
+                clipPlayer.Play(Oculus.Haptics.Controller.Left);
+            }
+            else
+                StartCoroutine(TriggerHapticsRoutine(controller));
+    }
+    public IEnumerator TriggerHapticsRoutine(OVRInput.Controller controller)
+    {
+        OVRInput.SetControllerVibration(frequency, amplitude, controller);
+        yield return new WaitForSeconds(duration);
+        OVRInput.SetControllerVibration(0, 0, controller);
+    }
+    #endregion
 }
 

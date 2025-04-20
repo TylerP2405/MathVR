@@ -11434,7 +11434,7 @@ MeshRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
+  m_StaticShadowCaster: 1
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
@@ -20774,16 +20774,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05d36dde835e14743be6f979bbdf040f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _NetworkedColor: {r: 0, g: 0, b: 0, a: 0}
   hapticClip: {fileID: 2460798210113038985, guid: e10f539385918f944b5c3c9f15e6067b, type: 3}
   renderTexture: {fileID: 8400000, guid: 5467026068204a549a8d13f8980ac424, type: 2}
-  maxDistance: 0.014
+  _BrushGlobalNetObj: {fileID: 0}
+  maxDistance: 0.018
   minBrushDistance: 2
   backGroundColor: {r: 1, g: 1, b: 1, a: 1}
   markerAlpha: 1
   useBoxCollider: 1
   brushes:
   - brushGrabbable: {fileID: 60950168}
+    grabInteractable: {fileID: 60950166}
     brushTransform: {fileID: 2123339103}
     brushNetObj: {fileID: 794473158}
     color: {r: 0, g: 0, b: 0, a: 0}
@@ -20794,6 +20795,7 @@ MonoBehaviour:
     isFirstDraw: 0
     isDrawing: 0
   - brushGrabbable: {fileID: 1211096042}
+    grabInteractable: {fileID: 1211096044}
     brushTransform: {fileID: 1313733987}
     brushNetObj: {fileID: 8562625290899751629}
     color: {r: 0, g: 0, b: 0, a: 0}
@@ -20804,9 +20806,10 @@ MonoBehaviour:
     isFirstDraw: 0
     isDrawing: 0
   - brushGrabbable: {fileID: 839426525}
+    grabInteractable: {fileID: 839426523}
     brushTransform: {fileID: 997094256}
     brushNetObj: {fileID: 1386799469}
-    color: {r: 0.8113208, g: 0.10868638, b: 0.2070551, a: 0}
+    color: {r: 0.86415094, g: 0.07011029, b: 0.1810097, a: 0}
     sizeY: 2
     sizeX: 2
     isEraser: 0

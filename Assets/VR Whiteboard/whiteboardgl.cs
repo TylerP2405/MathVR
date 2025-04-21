@@ -32,8 +32,17 @@ public class WhiteBoardGL : NetworkBehaviour
         public float sizeY;
         public float rotationAngle;
     }
+    // Buffer to reiceve drawing from other players
+    private List<DrawPoint> drawBuffer = new List<DrawPoint>();
 
-    private List<DrawPoint> localBuffer = new List<DrawPoint>();
+    // while rendering late draw, put new drawPoints to cache
+    private Queue<DrawPoint> drawCache = new Queue<DrawPoint>();
+
+    // store every drawing point that has been drawn
+    private List<DrawPoint> drawHistory = new List<DrawPoint>();
+    [Networked] 
+    public int currentDrawCount { get; set; }      // Sync latest number of drawing 
+    public bool processLateDraw = false;
 
     // Maximum budget for drawing per frame
     private const int MAX_BUFFER_PER_UPDATE = 1000;
@@ -83,9 +92,33 @@ public class WhiteBoardGL : NetworkBehaviour
     [Header("Add Brushes")]
     public List<BrushSettings> brushes = new List<BrushSettings>(); // List to hold multiple brushes
 
+    public override void Spawned()
+    {
+        Debug.Log("Starting whiteboard networked variables");
+        // Start with assigned networked variables
+        base.Spawned();
+
+        // Set networked drawCount from Host
+        if (HasStateAuthority)
+        {
+            currentDrawCount = 0;
+        }
+
+        // If this is a late joiner
+        // process lateDraw
+        Debug.LogWarning("local Hist count: " + drawHistory.Count + " | current count: " + currentDrawCount);
+        if ((drawHistory.Count == 0) && (drawHistory.Count < currentDrawCount) && !HasStateAuthority)
+        {
+            Debug.LogWarning("Late joiner detected");
+            // Request history from the authority
+            processLateDraw = true;
+            RPC_RequestDrawHistory(Runner.LocalPlayer);
+        }
+    }
 
     private void Start()
     {
+
         // Init haptic
         clipPlayer = new HapticClipPlayer(hapticClip);
 
@@ -141,20 +174,39 @@ public class WhiteBoardGL : NetworkBehaviour
 
 
         // Draw from local buffer (from others players) with throttling
-        if (localBuffer.Count > 0)
+
+        if (drawBuffer.Count > 0)
         {
-            Debug.Log("rendertexture from buffer");
-            int pointsToProcess = Mathf.Min(MAX_BUFFER_PER_UPDATE, localBuffer.Count);
+            int pointsToProcess = Mathf.Min(MAX_BUFFER_PER_UPDATE, drawBuffer.Count);
 
             // Only process up to MAX_BUFFER_PER_UPDATE commands
             for (int i = 0; i < pointsToProcess; i++)
             {
-                DrawAtPosition(localBuffer[i]);
+                DrawAtPosition(drawBuffer[i]);
             }
 
             // Remove only the processed commands
-            localBuffer.RemoveRange(0, pointsToProcess);
+            drawBuffer.RemoveRange(0, pointsToProcess);
 
+        }
+        // After process all lateDraw buffer, process from cache
+        else if (processLateDraw && drawBuffer.Count == 0 && drawCache.Count > 0)
+        {
+            Debug.Log("Processing cache " + drawCache.Count);
+            int pointsToProcess = Mathf.Min(MAX_BUFFER_PER_UPDATE, drawCache.Count);
+
+            // Only process up to MAX_BUFFER_PER_UPDATE commands
+            for (int i = 0; i < pointsToProcess; i++)
+            {
+                var cmd = drawCache.Dequeue();
+                DrawAtPosition(cmd);
+            }
+            // After processed all lateDraw
+            if (drawCache.Count == 0)
+            {
+                Debug.LogWarning("Stopped lateDraw");
+                processLateDraw = false;
+            }
         }
 
         // Deactivate the Render Texture after drawing
@@ -166,11 +218,57 @@ public class WhiteBoardGL : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.All)]
     private void RPC_AddDrawPoint(DrawPoint cmd)
     {
+        // If player is not drawing, then recieve drawPoint
         if (!BrushGlobalNetObj.HasStateAuthority)
         {
-            Debug.Log("add draw points on others");
-            localBuffer.Add(cmd);
+            if (processLateDraw)
+            {
+                drawCache.Enqueue(cmd);
+            }
+            else
+            {
+                Debug.Log("recieve draw points for player with authority: " + BrushGlobalNetObj.HasStateAuthority);
+                drawBuffer.Add(cmd);
+                currentDrawCount++;
+            }
         }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_SendDrawHistory(PlayerRef target, DrawPoint[] batch)
+    {
+        // Only the joining player processes this
+        if (Runner.LocalPlayer == target)
+        {
+            Debug.LogWarning("Recieving drawHist");
+            foreach (var cmd in batch)
+            {
+                drawBuffer.Add(cmd);
+            }
+        }
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_RequestDrawHistory(PlayerRef target)
+    {
+        // Send history in batches to avoid large messages
+        Debug.LogWarning("Sending DrawHist from Host");
+        const int batchSize = 2000;
+        for (int i = 0; i < drawHistory.Count; i += batchSize)
+        {
+            int count = Mathf.Min(batchSize, drawHistory.Count - i);
+            DrawPoint[] batch = drawHistory.GetRange(i, count).ToArray();
+            RPC_SendDrawHistory(target, batch);
+        }
+    }
+
+    private void processSyncDraw(DrawPoint cmd)
+        // Function to streamline drawing and syncing with other players
+    {
+        DrawAtPosition(cmd);
+        RPC_AddDrawPoint(cmd);
+        drawHistory.Add(cmd);
+        currentDrawCount++;
     }
 
     private void DrawBrushOnTexture(BrushSettings brush)
@@ -237,8 +335,7 @@ public class WhiteBoardGL : NetworkBehaviour
 
                 if (brush.isFirstDraw)
                 {
-                    DrawAtPosition(cmd);
-                    RPC_AddDrawPoint(cmd);
+                    processSyncDraw(cmd);
                     brush.lastPosition = currentPosition;
                     brush.isFirstDraw = false;
                     return;
@@ -256,10 +353,7 @@ public class WhiteBoardGL : NetworkBehaviour
                 if (crossesHorizontalEdge || crossesVerticalEdge)
                 {
                     // If crossing an edge, do not interpolate. Just draw at the current position
-                    DrawAtPosition(cmd);
-                    //DrawCommands.Add(cmd);
-                    //RPC_AddDrawCommand(cmd);
-                    RPC_AddDrawPoint(cmd);
+                    processSyncDraw(cmd);
                 }
                 else
                 {
@@ -269,9 +363,8 @@ public class WhiteBoardGL : NetworkBehaviour
                     for (int i = 1; i <= steps; i++)
                     {
                         Vector2 interpolatedPosition = Vector2.Lerp(brush.lastPosition, currentPosition, i / (float)steps);
-                        DrawAtPosition(cmd);
                         cmd.position = interpolatedPosition;
-                        RPC_AddDrawPoint(cmd);
+                        processSyncDraw(cmd);
                     }
                 }
 
@@ -337,7 +430,7 @@ public class WhiteBoardGL : NetworkBehaviour
 
         // Debug play
         clipPlayer.Play(Oculus.Haptics.Controller.Right);
-
+        /*
         if (controllerRef)
         {
             if (controllerRef.Handedness == Handedness.Right)
@@ -350,6 +443,7 @@ public class WhiteBoardGL : NetworkBehaviour
         {
             Debug.LogError("No controllerRef found");
         }
+        */
     }
     public void TriggerHaptics(OVRInput.Controller controller)
     {

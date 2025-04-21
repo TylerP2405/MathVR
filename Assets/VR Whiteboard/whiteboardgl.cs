@@ -42,10 +42,12 @@ public class WhiteBoardGL : NetworkBehaviour
     private List<DrawPoint> drawHistory = new List<DrawPoint>();
     [Networked] 
     public int currentDrawCount { get; set; }      // Sync latest number of drawing 
+    [Networked]
+    public bool sentAllDrawHist { get; set; }      // if Host had sent all drawing points from Hist or not
     public bool processLateDraw = false;
 
     // Maximum budget for drawing per frame
-    private const int MAX_BUFFER_PER_UPDATE = 1000;
+    private const int MAX_BUFFER_PER_UPDATE = 2000;
 
     // Check NetworkState of Brush object
     [Networked]
@@ -192,7 +194,7 @@ public class WhiteBoardGL : NetworkBehaviour
         // After process all lateDraw buffer, process from cache
         else if (processLateDraw && drawBuffer.Count == 0 && drawCache.Count > 0)
         {
-            Debug.Log("Processing cache " + drawCache.Count);
+            Debug.Log("Processing cache left: " + drawCache.Count);
             int pointsToProcess = Mathf.Min(MAX_BUFFER_PER_UPDATE, drawCache.Count);
 
             // Only process up to MAX_BUFFER_PER_UPDATE commands
@@ -202,9 +204,9 @@ public class WhiteBoardGL : NetworkBehaviour
                 DrawAtPosition(cmd);
             }
             // After processed all lateDraw
-            if (drawCache.Count == 0)
+            if (drawCache.Count == 0 && sentAllDrawHist)
             {
-                Debug.LogWarning("Stopped lateDraw");
+                Debug.LogWarning("Stopped lateDraw with bool sent: " + sentAllDrawHist);
                 processLateDraw = false;
             }
         }
@@ -221,6 +223,7 @@ public class WhiteBoardGL : NetworkBehaviour
         // If player is not drawing, then recieve drawPoint
         if (!BrushGlobalNetObj.HasStateAuthority)
         {
+            // Add new drawPoints to cache if joined late
             if (processLateDraw)
             {
                 drawCache.Enqueue(cmd);
@@ -237,6 +240,7 @@ public class WhiteBoardGL : NetworkBehaviour
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RPC_SendDrawHistory(PlayerRef target, DrawPoint[] batch)
     {
+        Debug.LogWarning("Recieving drawHist for all");
         // Only the joining player processes this
         if (Runner.LocalPlayer == target)
         {
@@ -253,13 +257,14 @@ public class WhiteBoardGL : NetworkBehaviour
     {
         // Send history in batches to avoid large messages
         Debug.LogWarning("Sending DrawHist from Host");
-        const int batchSize = 2000;
+        const int batchSize = 10;
         for (int i = 0; i < drawHistory.Count; i += batchSize)
         {
             int count = Mathf.Min(batchSize, drawHistory.Count - i);
             DrawPoint[] batch = drawHistory.GetRange(i, count).ToArray();
             RPC_SendDrawHistory(target, batch);
         }
+        sentAllDrawHist = true;
     }
 
     private void processSyncDraw(DrawPoint cmd)

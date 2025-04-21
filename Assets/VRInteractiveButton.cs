@@ -429,5 +429,4 @@ public class VRInteractiveButton : MonoBehaviour
         Debug.Log("Image displayed with scroll support.");
     }
 
-
 }

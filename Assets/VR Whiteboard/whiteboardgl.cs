@@ -47,7 +47,7 @@ public class WhiteBoardGL : NetworkBehaviour
     public bool processLateDraw = false;
 
     // Maximum budget for drawing per frame
-    private const int MAX_BUFFER_PER_UPDATE = 2000;
+    private int MAX_BUFFER_PER_UPDATE = 4000;
 
     // Check NetworkState of Brush object
     [Networked]
@@ -156,8 +156,6 @@ public class WhiteBoardGL : NetworkBehaviour
  
     public void Update()
     {
- 
-        //Debug.Log("Processsing local");
         // Ensure the Render Texture is active for drawing
         RenderTexture.active = renderTexture;
 
@@ -175,10 +173,13 @@ public class WhiteBoardGL : NetworkBehaviour
         }
 
 
-        // Draw from local buffer (from others players) with throttling
-
+        // Draw from local buffer (drawPoints recieved from others players) with throttling
         if (drawBuffer.Count > 0)
         {
+            if (processLateDraw) {
+                // If process lateDraw, quadrupled the draw render allowed for catching up to date.
+                MAX_BUFFER_PER_UPDATE = MAX_BUFFER_PER_UPDATE * 4;
+            }
             int pointsToProcess = Mathf.Min(MAX_BUFFER_PER_UPDATE, drawBuffer.Count);
 
             // Only process up to MAX_BUFFER_PER_UPDATE commands
@@ -218,10 +219,10 @@ public class WhiteBoardGL : NetworkBehaviour
 
     // Send draw points into other players' localBuffer
     [Rpc(RpcSources.All, RpcTargets.All)]
-    private void RPC_AddDrawPoint(DrawPoint cmd)
+    private void RPC_AddDrawPoint(DrawPoint cmd, NetworkObject drawerBrush)
     {
         // If player is not drawing, then recieve drawPoint
-        if (!BrushGlobalNetObj.HasStateAuthority)
+        if (!drawerBrush.HasStateAuthority)
         {
             // Add new drawPoints to cache if joined late
             if (processLateDraw)
@@ -237,6 +238,7 @@ public class WhiteBoardGL : NetworkBehaviour
         }
     }
 
+    // Recieved drawPoints for late Joiners
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RPC_SendDrawHistory(PlayerRef target, DrawPoint[] batch)
     {
@@ -267,11 +269,11 @@ public class WhiteBoardGL : NetworkBehaviour
         sentAllDrawHist = true;
     }
 
-    private void processSyncDraw(DrawPoint cmd)
+    private void processSyncDraw(DrawPoint cmd, NetworkObject drawerBrush)
         // Function to streamline drawing and syncing with other players
     {
         DrawAtPosition(cmd);
-        RPC_AddDrawPoint(cmd);
+        RPC_AddDrawPoint(cmd, drawerBrush);
         drawHistory.Add(cmd);
         currentDrawCount++;
     }
@@ -340,7 +342,7 @@ public class WhiteBoardGL : NetworkBehaviour
 
                 if (brush.isFirstDraw)
                 {
-                    processSyncDraw(cmd);
+                    processSyncDraw(cmd, BrushGlobalNetObj);
                     brush.lastPosition = currentPosition;
                     brush.isFirstDraw = false;
                     return;
@@ -358,7 +360,7 @@ public class WhiteBoardGL : NetworkBehaviour
                 if (crossesHorizontalEdge || crossesVerticalEdge)
                 {
                     // If crossing an edge, do not interpolate. Just draw at the current position
-                    processSyncDraw(cmd);
+                    processSyncDraw(cmd, BrushGlobalNetObj);
                 }
                 else
                 {
@@ -369,7 +371,7 @@ public class WhiteBoardGL : NetworkBehaviour
                     {
                         Vector2 interpolatedPosition = Vector2.Lerp(brush.lastPosition, currentPosition, i / (float)steps);
                         cmd.position = interpolatedPosition;
-                        processSyncDraw(cmd);
+                        processSyncDraw(cmd, BrushGlobalNetObj);
                     }
                 }
 

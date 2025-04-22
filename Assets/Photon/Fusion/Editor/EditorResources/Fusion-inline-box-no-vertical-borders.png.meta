@@ -121,10 +121,3 @@ TextureImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 267958
-  packageName: Photon Fusion
-  packageVersion: 2.0.5
-  assetPath: Assets/Photon/Fusion/Editor/EditorResources/Fusion-inline-box-no-vertical-borders.png
-  uploadId: 735720

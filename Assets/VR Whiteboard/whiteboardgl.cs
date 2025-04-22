@@ -165,7 +165,9 @@ public class WhiteBoardGL : NetworkBehaviour
             // check if the brush is being held to only run functions for the brushs being used
             // change this to a holding check with what ever framework you use, this is a check to make sure that only 
             // the marker you are holding is processing any functions for performance
-            if ((brush.grabInteractable.State == Oculus.Interaction.InteractableState.Select) && (brush.brushNetObj.HasStateAuthority))
+            //if ((brush.grabInteractable.State == Oculus.Interaction.InteractableState.Select) && (brush.brushNetObj.HasStateAuthority))
+
+            if (brush.brushGrabbable && (brush.brushGrabbable.SelectingPointsCount > 0) && (brush.brushNetObj.HasStateAuthority))
             {
                 BrushGlobalNetObj = brush.brushNetObj;
                 DrawBrushOnTexture(brush);

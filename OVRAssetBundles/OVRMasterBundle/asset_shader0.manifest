@@ -1,0 +1,33 @@
+ManifestFileVersion: 0
+UnityVersion: 6000.0.36f1
+CRC: 1939138048
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 01fa4ef2fbf75b945e6a088050fc9b8d
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: bb8521372c98e74594d3b7eb1b0a7a88
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: f26c817c18ab0596f03fc5e64d34e062
+HashAppended: 0
+ClassTypes:
+- Class: 48
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Packages/com.meta.xr.sdk.core/Shaders/MetaLit.shader
+- Packages/com.meta.xr.sdk.interaction/Runtime/Shaders/Locomotion/TransparentVertexTexture.shader
+- Packages/com.meta.xr.sdk.interaction/Runtime/Shaders/Locomotion/Hotspot.shader
+- Packages/com.meta.xr.mrutilitykit/Core/Shaders/MRUKLit.shader
+- Packages/com.meta.xr.sdk.core/Editor/BuildingBlocks/BlockData/HandTracking/Shaders/OculusSampleAlphaHandOutline.shader
+- Assets/TextMesh Pro/Shaders/TMP_SDF-Mobile.shader
+- Packages/com.meta.xr.sdk.avatars/Scripts/Skinning/GpuSkinning/Shaders/skin-to-texture.shader
+- Packages/com.meta.xr.sdk.core/Editor/BuildingBlocks/BlockData/RoomModel/Shaders/TransparentTexture.shader
+- Assets/Samples/Meta Avatars SDK/35.0.0/Sample Scenes/Common/Shaders/ExampleLit.shader
+- Packages/com.meta.xr.sdk.avatars/Scripts/Skinning/GpuSkinning/Shaders/combine-morph-targets.shader
+- Packages/com.meta.xr.sdk.avatars/Scripts/Common/Shaders/Recommended/Style-2-Avatar-Meta.shader
+- Packages/com.unity.render-pipelines.universal/Shaders/Lit.shader
+- Packages/com.meta.xr.sdk.interaction/Runtime/Shaders/OculusHand.shader
+Dependencies: []

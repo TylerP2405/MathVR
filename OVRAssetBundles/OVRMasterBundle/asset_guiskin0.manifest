@@ -1,0 +1,36 @@
+ManifestFileVersion: 0
+UnityVersion: 6000.0.36f1
+CRC: 3295935715
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 57c1836bb87f51d9a8e96ed7ef6ea981
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 590a97f07e7194b73051edc4a7593f89
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: 0371bff5868d5acf8faf50eea41f3fc9
+HashAppended: 0
+ClassTypes:
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+- Class: 114
+  Script: {fileID: 12001, guid: 0000000000000000e000000000000000, type: 0}
+- Class: 115
+  Script: {instanceID: 0}
+- Class: 128
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers:
+- AssemblyName: UnityEngine.IMGUIModule
+  ClassName: UnityEngine.GUISettings
+- AssemblyName: UnityEngine.IMGUIModule
+  ClassName: UnityEngine.GUIStyle
+Assets:
+- Assets/Photon/Fusion/Runtime/FusionBootstrapDebugGUISkin.guiskin
+Dependencies:
+- E:/Unity VR Projects/MathVR/OVRAssetBundles/OVRMasterBundle/asset_png0

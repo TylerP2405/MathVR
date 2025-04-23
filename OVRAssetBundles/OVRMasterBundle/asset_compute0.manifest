@@ -1,0 +1,21 @@
+ManifestFileVersion: 0
+UnityVersion: 6000.0.36f1
+CRC: 1726834610
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 1b470dcfbec8cebc706e721b8757a23f
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 17a3557cae3d0f9916dbe762213cf068
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: f7b3ef622951b87ce1dbd1759c3ef58f
+HashAppended: 0
+ClassTypes:
+- Class: 72
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Packages/com.meta.xr.sdk.avatars/Scripts/Skinning/GpuSkinning/Shaders/OvrApplyMorphsAndSkinning.compute
+Dependencies: []

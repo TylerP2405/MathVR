@@ -1,0 +1,119 @@
+ManifestFileVersion: 0
+UnityVersion: 6000.0.36f1
+CRC: 2278297429
+HashAppended: 0
+AssetBundleManifest:
+  AssetBundleInfos:
+    Info_0:
+      Name: asset_resources
+      Dependencies:
+        Dependency_0: asset_shader0
+        Dependency_1: asset_fbx0
+        Dependency_2: asset_mat0
+        Dependency_3: asset_controller0
+        Dependency_4: asset_prefab0
+        Dependency_5: asset_ttf0
+    Info_1:
+      Name: scene_board-multiplayer-test
+      Dependencies:
+        Dependency_0: asset_resources
+        Dependency_1: asset_fbx0
+        Dependency_2: asset_asset0
+        Dependency_3: asset_mat0
+        Dependency_4: asset_mat1
+        Dependency_5: asset_png0
+        Dependency_6: asset_controller0
+        Dependency_7: asset_mp30
+        Dependency_8: asset_exr0
+        Dependency_9: asset_obj0
+        Dependency_10: asset_guiskin0
+        Dependency_11: asset_fbx0
+        Dependency_12: asset_prefab0
+        Dependency_13: asset_rendertexture0
+        Dependency_14: asset_haptic0
+        Dependency_15: asset_inputactions0
+    Info_2:
+      Name: asset_shader0
+      Dependencies: {}
+    Info_3:
+      Name: asset_fbx0
+      Dependencies:
+        Dependency_0: asset_shader0
+        Dependency_1: asset_mat0
+        Dependency_2: asset_png0
+        Dependency_3: asset_tga0
+        Dependency_4: asset_shadergraph0
+    Info_4:
+      Name: asset_asset0
+      Dependencies:
+        Dependency_0: asset_shader0
+        Dependency_1: asset_png0
+    Info_5:
+      Name: asset_mat0
+      Dependencies:
+        Dependency_0: asset_shader0
+        Dependency_1: asset_png0
+        Dependency_2: asset_tga0
+    Info_6:
+      Name: asset_mat1
+      Dependencies:
+        Dependency_0: asset_shader0
+        Dependency_1: asset_png0
+    Info_7:
+      Name: asset_png0
+      Dependencies: {}
+    Info_8:
+      Name: asset_controller0
+      Dependencies:
+        Dependency_0: asset_fbx0
+    Info_9:
+      Name: asset_mp30
+      Dependencies: {}
+    Info_10:
+      Name: asset_exr0
+      Dependencies: {}
+    Info_11:
+      Name: asset_obj0
+      Dependencies:
+        Dependency_0: asset_shader0
+    Info_12:
+      Name: asset_guiskin0
+      Dependencies:
+        Dependency_0: asset_png0
+    Info_13:
+      Name: asset_fbx0
+      Dependencies:
+        Dependency_0: asset_shader0
+        Dependency_1: asset_mat1
+        Dependency_2: asset_png0
+    Info_14:
+      Name: asset_prefab0
+      Dependencies:
+        Dependency_0: asset_resources
+        Dependency_1: asset_shader0
+        Dependency_2: asset_asset0
+        Dependency_3: asset_compute0
+    Info_15:
+      Name: asset_rendertexture0
+      Dependencies: {}
+    Info_16:
+      Name: asset_tga0
+      Dependencies: {}
+    Info_17:
+      Name: asset_haptic0
+      Dependencies: {}
+    Info_18:
+      Name: asset_shadergraph0
+      Dependencies: {}
+    Info_19:
+      Name: asset_psd0
+      Dependencies: {}
+    Info_20:
+      Name: asset_compute0
+      Dependencies: {}
+    Info_21:
+      Name: asset_inputactions0
+      Dependencies: {}
+    Info_22:
+      Name: asset_ttf0
+      Dependencies: {}

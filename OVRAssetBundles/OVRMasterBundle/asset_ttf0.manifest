@@ -1,0 +1,27 @@
+ManifestFileVersion: 0
+UnityVersion: 6000.0.36f1
+CRC: 1874260784
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 47e6ac3f5bf844300dee1477ac4bad20
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 7623a04346d220483f62bdfe72afea62
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: 45fd1cecd8614128b6b64b112abfe804
+HashAppended: 0
+ClassTypes:
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+- Class: 128
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/TextMesh Pro/Fonts/LiberationSans.ttf
+Dependencies: []

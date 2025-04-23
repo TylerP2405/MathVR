@@ -1,0 +1,48 @@
+ManifestFileVersion: 0
+UnityVersion: 6000.0.36f1
+CRC: 837156234
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 79aa5f6135176dd035953d41af2c9894
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: cbae08e04184d6a54b32507565ca923c
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: e04bc48eb197bda73a584ec1cfa814ab
+HashAppended: 0
+ClassTypes:
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 89
+  Script: {instanceID: 0}
+- Class: 213
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Packages/com.meta.xr.sdk.core/Textures/MetaQuestTouchPlus/MetaQuestTouchPlus_Normals.png
+- Assets/Photon/PhotonVoice/Demos/DemoVoicePun/Textures/SkyBox-Voice.png
+- Assets/Photon/Fusion/Runtime/FusionBootstrapDebugGUIStartButton.png
+- Packages/com.meta.xr.sdk.core/Textures/MetaQuestTouchPlus/MetaQuestTouchPlus_Metallic.png
+- Packages/com.meta.xr.sdk.core/Textures/MetaQuestTouchPlus/MetaQuestTouchPlus_Left_BaseColor_AO_AlphaRoughness.png
+- Assets/Photon/Fusion/Runtime/FusionBootstrapDebugGUIStartWindow.png
+- Packages/com.meta.xr.sdk.core/Textures/MetaQuestTouchPlus/MetaQuestTouchPlus_Right_BaseColor_AO_AlphaRoughness.png
+- Packages/com.meta.xr.sdk.core/Textures/MetaQuestTouchPro/controller_l_lo_Normal.png
+- Packages/com.meta.xr.sdk.interaction/Runtime/Textures/RainbowGradient.png
+- Packages/com.meta.xr.sdk.avatars/CoreAssets/Textures/lut_sss_ZH.png
+- Packages/com.meta.xr.sdk.interaction/Runtime/Textures/Reticle-Circle.png
+- Packages/com.meta.xr.sdk.core/Textures/OculusTouchForRift/touchController_albedo.png
+- Packages/com.meta.xr.sdk.core/Textures/MetaQuestTouchPro/controller_r_lo_Normal.png
+- Packages/com.meta.xr.sdk.interaction/Runtime/Textures/fingers_glow_mask.png
+- Assets/Photon/Fusion/Runtime/FusionBootstrapDebugGUIStartButtonDown.png
+- Packages/com.meta.xr.sdk.core/Textures/MetaQuestTouchPro/controller_r_lo_BaseColor.png
+- Assets/Whiteboard/Textures/WhiteboardColors.png
+- Packages/com.meta.xr.sdk.core/Textures/MetaQuestTouchPro/controller_l_lo_BaseColor.png
+- Assets/Photon/Fusion/Runtime/FusionBootstrapDebugGUIStartButtonOver.png
+- Packages/com.meta.xr.sdk.core/Textures/MetaQuestTouchPro/batteryIndicatorTexture32.png
+- Assets/Scenes/Board-multiplayer-test/Lightmap-0_comp_dir.png
+- Packages/com.meta.xr.sdk.interaction/Runtime/Textures/Reticle-Dot.png
+- Assets/spinner-svgrepo-com.png
+- Packages/com.meta.xr.sdk.avatars/CoreAssets/Textures/lut_sss_curvature.png
+Dependencies: []

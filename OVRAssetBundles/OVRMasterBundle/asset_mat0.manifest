@@ -1,0 +1,59 @@
+ManifestFileVersion: 0
+UnityVersion: 6000.0.36f1
+CRC: 1180334092
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 42f722adc125baae37cddd953f0e7ea9
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: f4678b21a74d48dd374d176af846d926
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: fd0ebe989dfec3fb9dd9706ec3397df8
+HashAppended: 0
+ClassTypes:
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+- Class: 89
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Packages/com.meta.xr.sdk.interaction/Runtime/Materials/OculusHandWire.mat
+- Packages/com.meta.xr.sdk.core/Meshes/OculusTouchForQuestAndRiftS/Materials/OculusTouchForQuestAndRiftS_Material.mat
+- Packages/com.meta.xr.sdk.interaction/Runtime/Materials/ProceduralArcMaterial.mat
+- Packages/com.meta.xr.sdk.core/Meshes/MetaQuestTouchPlus/Materials/MetaQuestTouchPlusMATphong_left.mat
+- Assets/Whiteboard/Materials/PenMaterial.mat
+- Packages/com.unity.render-pipelines.universal/Editor/SceneTemplates/Standard/Materials/Black.mat
+- Assets/Samples/Meta Avatars SDK/35.0.0/Sample Scenes/Environments/NeutralRig/Materials/URPMaterials/chrome_urp.mat
+- Assets/VR Whiteboard/whiteboard.mat
+- Assets/ButtonColor.mat
+- Packages/com.meta.xr.sdk.interaction/Runtime/Materials/DistanceReticle.mat
+- Packages/com.meta.xr.sdk.core/Meshes/MetaQuestTouchPro/Materials/MetaQuestProLeft_Material.mat
+- Packages/com.meta.xr.sdk.core/Editor/BuildingBlocks/BlockData/HandTracking/Materials/SystemGestureHandMaterial.mat
+- Packages/com.meta.xr.sdk.core/Editor/BuildingBlocks/BlockData/Shared/Material/SharedMaterial.mat
+- Packages/com.meta.xr.sdk.core/Meshes/OculusTouchForRift/Materials/OculusTouchForRift_Material.mat
+- Packages/com.meta.xr.sdk.interaction/Runtime/Materials/TeleportReticleMaterial.mat
+- Packages/com.meta.xr.sdk.core/Editor/BuildingBlocks/BlockData/SampleSpatialAnchorController/Materials/IconBackground.mat
+- Assets/Samples/Meta Avatars SDK/35.0.0/Sample Scenes/Scenes/MirrorScene/Floor.mat
+- Assets/Photon/PhotonVoice/Demos/DemoVoicePun/Materials/SkyBox-Voice.mat
+- Packages/com.meta.xr.mrutilitykit/Core/Materials/DARKGRAY_WallArt.mat
+- Packages/com.meta.xr.sdk.interaction/Runtime/Materials/LocomotionIndicatorMaterial.mat
+- Packages/com.meta.xr.sdk.core/Meshes/MetaQuestTouchPro/Materials/batteryIndicator_mat.mat
+- Packages/com.meta.xr.sdk.interaction/Runtime/Materials/OculusHand.mat
+- Packages/com.meta.xr.sdk.core/Meshes/OculusTouchForQuest2/Materials/OculusTouchForQuest2_MAT.mat
+- Packages/com.meta.xr.sdk.core/Editor/BuildingBlocks/BlockData/HandTracking/Materials/SkeletonBoneMaterial.mat
+- Packages/com.meta.xr.sdk.core/Meshes/MetaQuestTouchPro/Materials/MetaQuestProRight_Material.mat
+- Packages/com.meta.xr.sdk.core/Meshes/MetaQuestTouchPlus/Materials/MetaQuestTouchPlusMATphong_right.mat
+- Packages/com.meta.xr.sdk.interaction/Runtime/Materials/TransparentStandard.mat
+- Packages/com.unity.render-pipelines.universal/Runtime/Materials/Lit.mat
+- Packages/com.meta.xr.sdk.core/Editor/BuildingBlocks/BlockData/HandTracking/Materials/DefaultHandMaterial.mat
+- Packages/com.meta.xr.sdk.interaction/Runtime/Materials/Unlit Material.mat
+Dependencies:
+- E:/Unity VR Projects/MathVR/OVRAssetBundles/OVRMasterBundle/asset_png0
+- E:/Unity VR Projects/MathVR/OVRAssetBundles/OVRMasterBundle/asset_shader0
+- E:/Unity VR Projects/MathVR/OVRAssetBundles/OVRMasterBundle/asset_tga0

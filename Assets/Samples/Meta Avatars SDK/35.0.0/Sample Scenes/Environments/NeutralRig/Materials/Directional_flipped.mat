@@ -8,8 +8,8 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Directional_flipped
-  m_Shader: {fileID: 4800000, guid: 8cd2fcf1c7d0d6547abf291d5635ccc2, type: 3}
-  m_Parent: {fileID: 2100000, guid: 37fd9885d95756843ae12c5c858828b2, type: 2}
+  m_Shader: {fileID: 4800000, guid: 3a4384a97ee36b54cb7114ba12a91159, type: 3}
+  m_Parent: {fileID: 2100000, guid: 56d234bc3891cc04b987641ca3c7fa78, type: 2}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
   m_InvalidKeywords:
